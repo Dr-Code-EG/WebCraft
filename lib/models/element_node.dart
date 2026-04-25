@@ -95,10 +95,12 @@ class ElementNode {
     Map<String, String>? props,
     Map<String, String>? style,
     List<ElementNode>? children,
+    Map<String, ElementEvent>? events,
   })  : id = id ?? _uuid.v4(),
         props = props ?? <String, String>{},
         style = style ?? <String, String>{},
-        children = children ?? <ElementNode>[];
+        children = children ?? <ElementNode>[],
+        events = events ?? <String, ElementEvent>{};
 
   final String id;
   ElementType type;
@@ -111,12 +113,16 @@ class ElementNode {
 
   final List<ElementNode> children;
 
+  /// Block-event handlers keyed by event name (e.g. `onClick`, `onChange`).
+  final Map<String, ElementEvent> events;
+
   ElementNode copyWithNewIds() {
     return ElementNode(
       type: type,
       props: Map.of(props),
       style: Map.of(style),
       children: children.map((c) => c.copyWithNewIds()).toList(),
+      events: events.map((k, v) => MapEntry(k, v.copy())),
     );
   }
 
@@ -126,6 +132,8 @@ class ElementNode {
         'props': props,
         'style': style,
         'children': children.map((c) => c.toJson()).toList(),
+        if (events.isNotEmpty)
+          'events': events.map((k, v) => MapEntry(k, v.toJson())),
       };
 
   factory ElementNode.fromJson(Map<String, dynamic> json) {
@@ -138,7 +146,38 @@ class ElementNode {
               ?.map((c) => ElementNode.fromJson(c as Map<String, dynamic>))
               .toList() ??
           [],
+      events: (json['events'] as Map?)?.map(
+            (k, v) => MapEntry(
+                k as String, ElementEvent.fromJson(v as Map<String, dynamic>)),
+          ) ??
+          {},
     );
+  }
+
+  /// Supported event names for this element.
+  List<String> get supportedEvents {
+    switch (type) {
+      case ElementType.button:
+      case ElementType.link:
+      case ElementType.image:
+      case ElementType.card:
+      case ElementType.text:
+      case ElementType.heading:
+      case ElementType.paragraph:
+      case ElementType.container:
+      case ElementType.row:
+      case ElementType.column:
+      case ElementType.list:
+      case ElementType.divider:
+      case ElementType.spacer:
+      case ElementType.video:
+        return const ['onClick'];
+      case ElementType.input:
+      case ElementType.textarea:
+        return const ['onChange', 'onClick'];
+      case ElementType.form:
+        return const ['onSubmit'];
+    }
   }
 
   /// Create a default-styled element of [type] with sensible default props.
@@ -302,4 +341,27 @@ class ElementNode {
     }
     return node;
   }
+}
+
+/// Saved Blockly workspace XML + last-generated JS body for one event handler.
+class ElementEvent {
+  ElementEvent({required this.workspaceXml, this.jsBody = ''});
+
+  String workspaceXml;
+  String jsBody;
+
+  ElementEvent copy() =>
+      ElementEvent(workspaceXml: workspaceXml, jsBody: jsBody);
+
+  Map<String, dynamic> toJson() => {
+        'workspaceXml': workspaceXml,
+        'jsBody': jsBody,
+      };
+
+  factory ElementEvent.fromJson(Map<String, dynamic> json) => ElementEvent(
+        workspaceXml: json['workspaceXml'] as String? ?? '',
+        jsBody: json['jsBody'] as String? ?? '',
+      );
+
+  bool get isEmpty => workspaceXml.trim().isEmpty && jsBody.trim().isEmpty;
 }

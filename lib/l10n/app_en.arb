@@ -133,6 +133,22 @@
   "untitledProject": "Untitled project",
   "homePage": "Home",
 
+  "events": "Events",
+  "blockLogic": "Block logic",
+  "pageLogic": "Page logic",
+  "onLoad": "On load",
+  "onClick": "On click",
+  "onChange": "On change",
+  "onSubmit": "On submit",
+  "editBlocks": "Edit blocks",
+  "clearBlocks": "Clear blocks",
+  "blocksConfigured": "Configured",
+  "blocksEmpty": "Not set",
+  "blockEditorTitle": "Block editor — {event}",
+  "@blockEditorTitle": {
+    "placeholders": { "event": { "type": "String" } }
+  },
+
   "yes": "Yes",
   "no": "No",
   "ok": "OK",

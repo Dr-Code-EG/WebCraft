@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../codegen/css_generator.dart';
 import '../codegen/html_generator.dart';
+import '../codegen/js_generator.dart';
 import '../models/project.dart';
 
 /// Builds a static-site ZIP from a [Project] and shares it via the
@@ -23,13 +24,22 @@ class ExportService {
       _textFile('public/assets/css/styles.css', CssGenerator.baseStylesheet()),
     );
 
-    // Pages
+    // Pages + per-page JavaScript bundles
     for (final page in project.pages) {
-      final html = HtmlGenerator.pageDocument(project, page);
       final fileName = page.fileName.endsWith('.html')
           ? page.fileName
           : '${page.fileName}.html';
+      final scriptName = '${fileName.replaceAll('.html', '')}.js';
+      final html = HtmlGenerator.pageDocument(
+        project,
+        page,
+        scriptHref: 'assets/js/$scriptName',
+      );
       archive.addFile(_textFile('public/$fileName', html));
+      archive.addFile(_textFile(
+        'public/assets/js/$scriptName',
+        JsGenerator.pageScript(page),
+      ));
     }
 
     // Project source (for re-import later)

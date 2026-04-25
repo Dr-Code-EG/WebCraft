@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../models/element_node.dart';
+import '../../screens/block_editor_screen.dart';
 import '../../state/editor_provider.dart';
 
 class PropertiesPanel extends StatelessWidget {
@@ -54,6 +55,7 @@ class _Editor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ed = context.read<EditorProvider>();
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -61,8 +63,14 @@ class _Editor extends StatelessWidget {
         const SizedBox(height: 16),
         ..._contentFields(context, ed),
         const Divider(height: 32),
-        _Section(title: AppLocalizations.of(context)!.propBackground),
+        _Section(title: l10n.propBackground),
         ..._styleFields(context, ed),
+        if (element.supportedEvents.isNotEmpty) ...[
+          const Divider(height: 32),
+          _Section(title: l10n.events),
+          for (final evt in element.supportedEvents)
+            _EventRow(elementId: element.id, eventName: evt),
+        ],
       ],
     );
   }
@@ -363,6 +371,94 @@ class _DropdownField extends StatelessWidget {
               contentPadding:
                   EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EventRow extends StatelessWidget {
+  const _EventRow({required this.elementId, required this.eventName});
+
+  final String elementId;
+  final String eventName;
+
+  String _label(AppLocalizations l10n, String evt) {
+    switch (evt) {
+      case 'onClick':
+        return l10n.onClick;
+      case 'onChange':
+        return l10n.onChange;
+      case 'onSubmit':
+        return l10n.onSubmit;
+      case 'onLoad':
+        return l10n.onLoad;
+    }
+    return evt;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final ed = context.watch<EditorProvider>();
+    final el = ed.selectedElement;
+    final evt = el?.events[eventName];
+    final hasBlocks = evt != null && !evt.isEmpty;
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: hasBlocks ? Colors.green : cs.outline,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_label(l10n, eventName),
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text(
+                  hasBlocks ? l10n.blocksConfigured : l10n.blocksEmpty,
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          if (hasBlocks)
+            IconButton(
+              tooltip: l10n.clearBlocks,
+              icon: const Icon(Icons.delete_outline, size: 20),
+              onPressed: () => ed.clearElementEvent(elementId, eventName),
+            ),
+          FilledButton.tonalIcon(
+            onPressed: () async {
+              final result = await BlockEditorScreen.open(
+                context,
+                title: l10n.blockEditorTitle(_label(l10n, eventName)),
+                initialXml: evt?.workspaceXml ?? '',
+              );
+              if (result != null) {
+                ed.setElementEvent(
+                  elementId,
+                  eventName,
+                  ElementEvent(
+                    workspaceXml: result.workspaceXml,
+                    jsBody: result.jsBody,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.code, size: 18),
+            label: Text(hasBlocks ? l10n.edit : l10n.editBlocks),
           ),
         ],
       ),

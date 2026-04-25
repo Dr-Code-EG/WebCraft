@@ -3,6 +3,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../codegen/css_generator.dart';
 import '../codegen/html_generator.dart';
+import '../codegen/js_generator.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/project.dart';
 
@@ -36,14 +37,17 @@ class _PreviewScreenState extends State<PreviewScreen> {
     final page = widget.project.pages.firstWhere((p) => p.id == _activePageId,
         orElse: () => widget.project.pages.first);
     final body = HtmlGenerator.pageDocument(widget.project, page,
-        includeStyleSheet: false);
+        includeStyleSheet: false, includeScript: false);
     final css = CssGenerator.baseStylesheet();
-    // Inject the generated stylesheet inline so the WebView preview is
-    // self-contained (no external file lookups).
-    final injected = body.replaceFirst(
-      '</head>',
-      '<style>$css</style></head>',
-    );
+    final js = JsGenerator.pageScript(page);
+    // Inject the generated stylesheet + scripts inline so the WebView preview
+    // is self-contained (no external file lookups).
+    final injected = body
+        .replaceFirst(
+          '</head>',
+          '<style>$css</style></head>',
+        )
+        .replaceFirst('</body>', '<script>$js</script></body>');
     setState(() => _loading = true);
     _controller.loadHtmlString(injected);
   }

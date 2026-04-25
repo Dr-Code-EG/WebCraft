@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../models/element_node.dart';
 import '../models/project.dart';
 import '../services/export_service.dart';
 import '../state/editor_provider.dart';
@@ -10,6 +11,7 @@ import '../widgets/editor/canvas_view.dart';
 import '../widgets/editor/element_library.dart';
 import '../widgets/editor/properties_panel.dart';
 import '../widgets/editor/tree_view.dart';
+import 'block_editor_screen.dart';
 import 'preview_screen.dart';
 
 class EditorScreen extends StatefulWidget {
@@ -71,6 +73,11 @@ class _EditorScreenState extends State<EditorScreen> {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w600)),
             actions: [
+              IconButton(
+                tooltip: l10n.pageLogic,
+                icon: const Icon(Icons.code),
+                onPressed: () => _editPageLogic(context),
+              ),
               IconButton(
                 tooltip: l10n.preview,
                 icon: const Icon(Icons.visibility_outlined),
@@ -144,6 +151,26 @@ class _EditorScreenState extends State<EditorScreen> {
         );
       },
     );
+  }
+
+  Future<void> _editPageLogic(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final page = _editor.activePage;
+    final existing = page.events['onLoad'];
+    final result = await BlockEditorScreen.open(
+      context,
+      title: l10n.blockEditorTitle(l10n.onLoad),
+      initialXml: existing?.workspaceXml ?? '',
+    );
+    if (result != null) {
+      _editor.setPageEvent(
+        'onLoad',
+        ElementEvent(
+          workspaceXml: result.workspaceXml,
+          jsBody: result.jsBody,
+        ),
+      );
+    }
   }
 
   Future<void> _exportZip(BuildContext context) async {
