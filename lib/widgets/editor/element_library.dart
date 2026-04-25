@@ -5,7 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../models/element_node.dart';
 import '../../state/editor_provider.dart';
 
-/// Sidebar listing draggable HTML element kinds.
+/// Sidebar listing draggable HTML element kinds, grouped by category.
 class ElementLibrary extends StatelessWidget {
   const ElementLibrary({super.key});
 
@@ -16,51 +16,69 @@ class ElementLibrary extends StatelessWidget {
 
     return Container(
       color: cs.surfaceContainerLowest,
-      child: Column(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(12, 16, 12, 24),
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.only(left: 4, right: 4, bottom: 8),
             child: Row(
               children: [
-                Icon(Icons.widgets_outlined, color: cs.primary),
+                Icon(Icons.widgets_rounded, color: cs.primary, size: 22),
                 const SizedBox(width: 8),
                 Text(
                   l10n.elements,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 16),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               l10n.dragToCanvas,
               style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
             ),
           ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(8),
-              children: [
-                _section(context, _layoutItems(l10n)),
-                _section(context, _contentItems(l10n)),
-                _section(context, _formItems(l10n)),
-                _section(context, _miscItems(l10n)),
-              ],
-            ),
-          ),
+          const SizedBox(height: 12),
+          _section(context, l10n.categoryLayout, _layoutItems(l10n)),
+          _section(context, l10n.categoryContent, _contentItems(l10n)),
+          _section(context, l10n.categoryForm, _formItems(l10n)),
+          _section(context, l10n.categoryMisc, _miscItems(l10n)),
         ],
       ),
     );
   }
 
-  Widget _section(BuildContext context, List<_LibraryItem> items) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: items.map((it) => _DraggableTile(item: it)).toList(),
+  Widget _section(
+      BuildContext context, String title, List<_LibraryItem> items) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+            child: Text(
+              title,
+              style: TextStyle(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                letterSpacing: 0.6,
+              ),
+            ),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: items.map((it) => _DraggableTile(item: it)).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -119,16 +137,16 @@ class _DraggableTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tile = SizedBox(
-      width: 96,
-      height: 80,
+      width: 92,
+      height: 88,
       child: Material(
         color: cs.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: cs.outlineVariant),
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: cs.outlineVariant.withOpacity(0.6)),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           onTap: () {
             Provider.of<EditorProvider>(context, listen: false)
                 .addElement(item.type);
@@ -138,7 +156,16 @@ class _DraggableTile extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(item.icon, color: cs.primary),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(item.icon, color: cs.primary, size: 20),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   item.label,
@@ -146,7 +173,7 @@ class _DraggableTile extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w500),
+                      fontSize: 11, fontWeight: FontWeight.w600),
                 ),
               ],
             ),

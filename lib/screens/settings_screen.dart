@@ -65,7 +65,7 @@ class SettingsScreen extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.info_outline),
                 title: Text(l10n.about),
-                subtitle: const Text('WebCraft v0.1.0 — MVP'),
+                subtitle: const Text('WebCraft v0.3.0'),
               ),
             ],
           );

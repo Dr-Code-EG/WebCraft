@@ -19,7 +19,7 @@ class CanvasView extends StatelessWidget {
       color: cs.surfaceContainerHigh,
       child: Column(
         children: [
-          _CanvasToolbar(),
+          const _CanvasToolbar(),
           Expanded(
             child: Consumer<EditorProvider>(
               builder: (context, ed, _) {
@@ -74,63 +74,79 @@ class CanvasView extends StatelessWidget {
 }
 
 class _CanvasToolbar extends StatelessWidget {
+  const _CanvasToolbar();
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return Consumer<EditorProvider>(
       builder: (context, ed, _) {
         final hasSelection = ed.selectedElementId != null &&
             ed.selectedElementId != ed.activePage.root.id;
         return Container(
-          height: 44,
+          height: 48,
           padding: const EdgeInsetsDirectional.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: cs.surface,
-            border: Border(bottom: BorderSide(color: cs.outlineVariant)),
+            border: Border(
+              bottom: BorderSide(color: cs.outlineVariant.withOpacity(0.6)),
+            ),
           ),
           child: Row(
             children: [
+              _PageSwitcher(),
+              const SizedBox(width: 4),
               IconButton(
-                tooltip: 'Move up',
+                tooltip: l10n.moveUp,
                 onPressed: hasSelection
                     ? () => ed.moveElementUp(ed.selectedElementId!)
                     : null,
-                icon: const Icon(Icons.arrow_upward),
+                icon: const Icon(Icons.arrow_upward_rounded),
                 iconSize: 20,
               ),
               IconButton(
-                tooltip: 'Move down',
+                tooltip: l10n.moveDown,
                 onPressed: hasSelection
                     ? () => ed.moveElementDown(ed.selectedElementId!)
                     : null,
-                icon: const Icon(Icons.arrow_downward),
+                icon: const Icon(Icons.arrow_downward_rounded),
                 iconSize: 20,
               ),
               IconButton(
-                tooltip: 'Duplicate',
+                tooltip: l10n.duplicate,
                 onPressed: hasSelection
                     ? () => ed.duplicateElement(ed.selectedElementId!)
                     : null,
-                icon: const Icon(Icons.content_copy_outlined),
+                icon: const Icon(Icons.content_copy_rounded),
                 iconSize: 20,
               ),
               IconButton(
-                tooltip: 'Delete',
+                tooltip: l10n.delete,
                 onPressed: hasSelection
                     ? () => ed.deleteElement(ed.selectedElementId!)
                     : null,
-                icon: const Icon(Icons.delete_outline),
+                icon: const Icon(Icons.delete_outline_rounded),
                 iconSize: 20,
               ),
               const Spacer(),
               if (ed.selectedElementId != null)
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: 8),
-                  child: Text(
-                    _label(context, ed.selectedElement?.type),
-                    style: TextStyle(
-                      color: cs.onSurfaceVariant,
-                      fontSize: 12,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _label(context, ed.selectedElement?.type),
+                      style: TextStyle(
+                        color: cs.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -629,6 +645,53 @@ class _DropPlaceholder extends StatelessWidget {
         AppLocalizations.of(context)!.dragToCanvas,
         style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
       ),
+    );
+  }
+}
+
+class _PageSwitcher extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Consumer<EditorProvider>(
+      builder: (context, ed, _) {
+        final pages = ed.project.pages;
+        final active = ed.activePage;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: active.id,
+              isDense: true,
+              icon: const Icon(Icons.expand_more_rounded, size: 18),
+              borderRadius: BorderRadius.circular(12),
+              items: [
+                for (final p in pages)
+                  DropdownMenuItem(
+                    value: p.id,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.web_rounded, size: 14, color: cs.primary),
+                        const SizedBox(width: 6),
+                        Text(p.name,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+              ],
+              onChanged: (id) {
+                if (id != null) ed.selectPage(id);
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }

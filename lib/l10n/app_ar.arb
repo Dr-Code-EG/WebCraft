@@ -13,6 +13,8 @@
   "delete": "حذف",
   "rename": "إعادة تسمية",
   "duplicate": "تكرار",
+  "moveUp": "تحريك لأعلى",
+  "moveDown": "تحريك لأسفل",
   "open": "فتح",
   "save": "حفظ",
   "savedProjects": "المشاريع المحفوظة",
@@ -124,6 +126,11 @@
   "blocksComingSoon": "محرر البلوكات (JavaScript / PHP / MySQL) في المرحلة القادمة",
   "untitledProject": "مشروع بدون اسم",
   "homePage": "الرئيسية",
+
+  "categoryLayout": "تخطيط",
+  "categoryContent": "محتوى",
+  "categoryForm": "نماذج",
+  "categoryMisc": "متنوع",
 
   "events": "الأحداث",
   "blockLogic": "منطق البلوكات",

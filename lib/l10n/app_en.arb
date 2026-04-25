@@ -13,6 +13,8 @@
   "delete": "Delete",
   "rename": "Rename",
   "duplicate": "Duplicate",
+  "moveUp": "Move up",
+  "moveDown": "Move down",
   "open": "Open",
   "save": "Save",
   "savedProjects": "Saved projects",
@@ -132,6 +134,11 @@
   "blocksComingSoon": "Block editor (JavaScript / PHP / MySQL) coming in the next phase",
   "untitledProject": "Untitled project",
   "homePage": "Home",
+
+  "categoryLayout": "LAYOUT",
+  "categoryContent": "CONTENT",
+  "categoryForm": "FORMS",
+  "categoryMisc": "OTHER",
 
   "events": "Events",
   "blockLogic": "Block logic",
