@@ -261,6 +261,7 @@ class _EditorScreenState extends State<EditorScreen> {
       ),
     );
     try {
+      await _saveNow(showSnack: false);
       await ExportService().shareZip(widget.project);
       navigator.pop();
       messenger.showSnackBar(SnackBar(content: Text(l10n.exportSuccess)));
