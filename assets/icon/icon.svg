@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#A855F7"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="220" ry="220" fill="url(#bg)"/>
+  <!-- browser window -->
+  <g transform="translate(192,260)">
+    <rect width="640" height="480" rx="40" ry="40" fill="url(#g2)"/>
+    <rect width="640" height="80" rx="40" ry="40" fill="#0F172A" opacity="0.08"/>
+    <circle cx="40" cy="40" r="12" fill="#EF4444"/>
+    <circle cx="80" cy="40" r="12" fill="#F59E0B"/>
+    <circle cx="120" cy="40" r="12" fill="#10B981"/>
+    <!-- block 1 -->
+    <rect x="60" y="130" width="240" height="56" rx="14" fill="#6366F1"/>
+    <rect x="60" y="200" width="180" height="56" rx="14" fill="#A855F7"/>
+    <rect x="60" y="270" width="300" height="56" rx="14" fill="#22D3EE"/>
+    <rect x="60" y="340" width="200" height="56" rx="14" fill="#F59E0B"/>
+    <!-- code symbol -->
+    <g transform="translate(420,150)" stroke="#0F172A" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.85">
+      <polyline points="0,80 -50,140 0,200"/>
+      <polyline points="160,80 210,140 160,200"/>
+      <line x1="60" y1="60" x2="100" y2="220"/>
+    </g>
+  </g>
+</svg>

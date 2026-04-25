@@ -126,14 +126,25 @@ class _EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 96,
-              height: 96,
+              width: 112,
+              height: 112,
               decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                borderRadius: BorderRadius.circular(24),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [cs.primary, cs.tertiary],
+                ),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: cs.primary.withOpacity(0.25),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              child: Icon(Icons.web_asset_outlined,
-                  size: 48, color: cs.onPrimaryContainer),
+              child: const Icon(Icons.public_rounded,
+                  size: 56, color: Colors.white),
             ),
             const SizedBox(height: 24),
             Text(
@@ -175,27 +186,54 @@ class _ProjectTile extends StatelessWidget {
     final df =
         DateFormat.yMMMd(Localizations.localeOf(context).toString()).add_jm();
 
+    final pageCount = project.pages.length;
     return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: cs.outlineVariant),
-      ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
-          width: 48,
-          height: 48,
+          width: 56,
+          height: 56,
           decoration: BoxDecoration(
-            color: cs.primaryContainer,
-            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                cs.primary,
+                cs.tertiary,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(Icons.web_outlined, color: cs.onPrimaryContainer),
+          alignment: Alignment.center,
+          child:
+              const Icon(Icons.public_rounded, color: Colors.white, size: 28),
         ),
         title: Text(
           project.name,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
         ),
-        subtitle: Text(l10n.lastModified(df.format(project.updatedAt))),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Row(
+            children: [
+              Icon(Icons.layers_outlined, size: 14, color: cs.onSurfaceVariant),
+              const SizedBox(width: 4),
+              Text('$pageCount',
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+              const SizedBox(width: 12),
+              Icon(Icons.access_time_rounded,
+                  size: 14, color: cs.onSurfaceVariant),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  df.format(project.updatedAt),
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
+              ),
+            ],
+          ),
+        ),
         trailing: PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert),
           onSelected: (v) async {

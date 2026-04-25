@@ -407,60 +407,76 @@ class _EventRow extends StatelessWidget {
     final hasBlocks = evt != null && !evt.isEmpty;
     final cs = Theme.of(context).colorScheme;
 
+    Future<void> openEditor() async {
+      final result = await BlockEditorScreen.open(
+        context,
+        title: l10n.blockEditorTitle(_label(l10n, eventName)),
+        initialXml: evt?.workspaceXml ?? '',
+      );
+      if (result != null) {
+        ed.setElementEvent(
+          elementId,
+          eventName,
+          ElementEvent(
+            workspaceXml: result.workspaceXml,
+            jsBody: result.jsBody,
+          ),
+        );
+      }
+    }
+
+    final dot = Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        color: hasBlocks ? Colors.green : cs.outline,
+        shape: BoxShape.circle,
+      ),
+    );
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: hasBlocks ? Colors.green : cs.outline,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: cs.surfaceContainerLow,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: cs.outlineVariant.withOpacity(0.5)),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: openEditor,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
               children: [
-                Text(_label(l10n, eventName),
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text(
-                  hasBlocks ? l10n.blocksConfigured : l10n.blocksEmpty,
-                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                dot,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_label(l10n, eventName),
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 2),
+                      Text(
+                        hasBlocks ? l10n.blocksConfigured : l10n.blocksEmpty,
+                        style:
+                            TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
                 ),
+                if (hasBlocks)
+                  IconButton(
+                    tooltip: l10n.clearBlocks,
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    onPressed: () => ed.clearElementEvent(elementId, eventName),
+                  ),
+                Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
               ],
             ),
           ),
-          if (hasBlocks)
-            IconButton(
-              tooltip: l10n.clearBlocks,
-              icon: const Icon(Icons.delete_outline, size: 20),
-              onPressed: () => ed.clearElementEvent(elementId, eventName),
-            ),
-          FilledButton.tonalIcon(
-            onPressed: () async {
-              final result = await BlockEditorScreen.open(
-                context,
-                title: l10n.blockEditorTitle(_label(l10n, eventName)),
-                initialXml: evt?.workspaceXml ?? '',
-              );
-              if (result != null) {
-                ed.setElementEvent(
-                  elementId,
-                  eventName,
-                  ElementEvent(
-                    workspaceXml: result.workspaceXml,
-                    jsBody: result.jsBody,
-                  ),
-                );
-              }
-            },
-            icon: const Icon(Icons.code, size: 18),
-            label: Text(hasBlocks ? l10n.edit : l10n.editBlocks),
-          ),
-        ],
+        ),
       ),
     );
   }

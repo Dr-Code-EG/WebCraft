@@ -73,7 +73,12 @@ class _BlockEditorScreenState extends State<BlockEditorScreen> {
         await rootBundle.loadString('assets/blockly/blocks_compressed.js');
     final js =
         await rootBundle.loadString('assets/blockly/javascript_compressed.js');
-    final msg = await rootBundle.loadString('assets/blockly/msg_en.js');
+    if (!mounted) return;
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final msgPath = localeCode == 'ar'
+        ? 'assets/blockly/msg_ar.js'
+        : 'assets/blockly/msg_en.js';
+    final msg = await rootBundle.loadString(msgPath);
     final custom =
         await rootBundle.loadString('assets/blockly/custom_blocks.js');
 

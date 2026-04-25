@@ -13,8 +13,11 @@
   "delete": "Delete",
   "rename": "Rename",
   "duplicate": "Duplicate",
+  "moveUp": "Move up",
+  "moveDown": "Move down",
   "open": "Open",
   "save": "Save",
+  "savedConfirmation": "Saved",
   "savedProjects": "Saved projects",
   "noProjectsYet": "No projects yet",
   "noProjectsDescription": "Tap the + button to create your first website",
@@ -132,6 +135,11 @@
   "blocksComingSoon": "Block editor (JavaScript / PHP / MySQL) coming in the next phase",
   "untitledProject": "Untitled project",
   "homePage": "Home",
+
+  "categoryLayout": "LAYOUT",
+  "categoryContent": "CONTENT",
+  "categoryForm": "FORMS",
+  "categoryMisc": "OTHER",
 
   "events": "Events",
   "blockLogic": "Block logic",
