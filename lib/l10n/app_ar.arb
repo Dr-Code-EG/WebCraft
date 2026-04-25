@@ -17,6 +17,7 @@
   "moveDown": "تحريك لأسفل",
   "open": "فتح",
   "save": "حفظ",
+  "savedConfirmation": "تم الحفظ",
   "savedProjects": "المشاريع المحفوظة",
   "noProjectsYet": "لا توجد مشاريع بعد",
   "noProjectsDescription": "اضغط زر + لإنشاء أول موقع لك",

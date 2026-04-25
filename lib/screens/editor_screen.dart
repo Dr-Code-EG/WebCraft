@@ -55,7 +55,7 @@ class _EditorScreenState extends State<EditorScreen> {
     if (showSnack && mounted) {
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.save)),
+        SnackBar(content: Text(l10n.savedConfirmation)),
       );
     }
   }

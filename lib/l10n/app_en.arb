@@ -17,6 +17,7 @@
   "moveDown": "Move down",
   "open": "Open",
   "save": "Save",
+  "savedConfirmation": "Saved",
   "savedProjects": "Saved projects",
   "noProjectsYet": "No projects yet",
   "noProjectsDescription": "Tap the + button to create your first website",
