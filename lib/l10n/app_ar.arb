@@ -125,6 +125,22 @@
   "untitledProject": "مشروع بدون اسم",
   "homePage": "الرئيسية",
 
+  "events": "الأحداث",
+  "blockLogic": "منطق البلوكات",
+  "pageLogic": "منطق الصفحة",
+  "onLoad": "عند التحميل",
+  "onClick": "عند النقر",
+  "onChange": "عند التغيير",
+  "onSubmit": "عند الإرسال",
+  "editBlocks": "تعديل البلوكات",
+  "clearBlocks": "مسح البلوكات",
+  "blocksConfigured": "مُعدّ",
+  "blocksEmpty": "غير مُعدّ",
+  "blockEditorTitle": "محرّر البلوكات — {event}",
+  "@blockEditorTitle": {
+    "placeholders": { "event": { "type": "String" } }
+  },
+
   "yes": "نعم",
   "no": "لا",
   "ok": "حسناً",

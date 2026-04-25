@@ -128,6 +128,38 @@ class EditorProvider extends ChangeNotifier {
     _markDirty();
   }
 
+  void setElementEvent(String elementId, String eventName, ElementEvent event) {
+    final el = _findById(activePage.root, elementId);
+    if (el == null) return;
+    if (event.isEmpty) {
+      el.events.remove(eventName);
+    } else {
+      el.events[eventName] = event;
+    }
+    _markDirty();
+  }
+
+  void clearElementEvent(String elementId, String eventName) {
+    final el = _findById(activePage.root, elementId);
+    if (el == null) return;
+    el.events.remove(eventName);
+    _markDirty();
+  }
+
+  void setPageEvent(String eventName, ElementEvent event) {
+    if (event.isEmpty) {
+      activePage.events.remove(eventName);
+    } else {
+      activePage.events[eventName] = event;
+    }
+    _markDirty();
+  }
+
+  void clearPageEvent(String eventName) {
+    activePage.events.remove(eventName);
+    _markDirty();
+  }
+
   void markSaved() {
     _dirty = false;
     notifyListeners();
