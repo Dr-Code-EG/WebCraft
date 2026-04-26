@@ -133,6 +133,13 @@ class EditorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Notify listeners that block workspaces (event handlers, variables) on
+  /// the project changed externally — e.g. after returning from the Block
+  /// Workshop screen. Forces a re-paint of Logic-tab chips and persistence.
+  void markBlocksChanged() {
+    _markDirty();
+  }
+
   void _markDirty() {
     _dirty = true;
     notifyListeners();

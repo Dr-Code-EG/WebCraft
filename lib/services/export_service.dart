@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../codegen/blocks_js_generator.dart';
 import '../codegen/css_generator.dart';
 import '../codegen/html_generator.dart';
 import '../models/project.dart';
@@ -23,12 +24,20 @@ class ExportService {
       _textFile('public/assets/css/styles.css', CssGenerator.baseStylesheet()),
     );
 
+    // Generated JS for block-driven event handlers (omitted when empty).
+    final js = BlocksJsGenerator.generateProject(project);
+    final hasJs = js.trim().isNotEmpty;
+    if (hasJs) {
+      archive.addFile(_textFile('public/assets/js/main.js', js));
+    }
+
     // Pages
     for (final page in project.pages) {
       final fileName = page.fileName.endsWith('.html')
           ? page.fileName
           : '${page.fileName}.html';
-      final html = HtmlGenerator.pageDocument(project, page);
+      final html = HtmlGenerator.pageDocument(project, page,
+          includeMainScript: hasJs);
       archive.addFile(_textFile('public/$fileName', html));
     }
 

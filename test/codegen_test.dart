@@ -44,6 +44,20 @@ void main() {
       expect(out, contains('font-size: 20px;'));
     });
 
+    test('emits data-wc-id on every element for handler binding', () {
+      final node = ElementNode.defaults(ElementType.button);
+      node.props['text'] = 'Go';
+      final out = HtmlGenerator.element(node);
+      expect(out, contains('data-wc-id="${node.id}"'));
+    });
+
+    test('omits the main script tag when includeMainScript is false', () {
+      final project = Project(name: 'Test');
+      final html = HtmlGenerator.pageDocument(project, project.pages.first,
+          includeMainScript: false);
+      expect(html, isNot(contains('assets/js/main.js')));
+    });
+
     test('renders a full page document with stylesheet link', () {
       final project = Project(name: 'Test');
       final page = project.pages.first;

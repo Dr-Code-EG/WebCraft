@@ -143,6 +143,15 @@
   "tabContent": "المحتوى",
   "tabStyle": "التنسيق",
   "tabLayout": "التخطيط",
+  "tabLogic": "البلوكات",
+  "noEvents": "لا توجد أحداث لهذا العنصر",
+  "openWorkshopFor": "افتح ورشة البلوكات لـ {event}",
+  "@openWorkshopFor": {
+    "placeholders": { "event": { "type": "String" } }
+  },
+  "eventConfigured": "مُعدّ",
+  "eventEmpty": "فارغ",
+  "blockWorkshopTitle": "ورشة البلوكات",
   "editProperty": "تعديل {property}",
   "@editProperty": {
     "placeholders": { "property": { "type": "String" } }

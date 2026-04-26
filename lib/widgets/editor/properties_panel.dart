@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../blocks/catalog/block_registry.dart';
+import '../../blocks/model/block_node.dart';
+import '../../blocks/model/block_types.dart';
+import '../../blocks/model/block_workspace.dart';
+import '../../blocks/widgets/block_workshop_screen.dart';
 import '../../models/element_node.dart';
 import '../../state/editor_provider.dart';
 
@@ -74,7 +79,7 @@ class _Editor extends StatelessWidget {
     final layoutChips = _layoutChips(context, ed, l10n);
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -83,6 +88,8 @@ class _Editor extends StatelessWidget {
           SizedBox(
             height: 38,
             child: TabBar(
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
               labelColor: cs.primary,
               unselectedLabelColor: cs.onSurfaceVariant,
               indicatorSize: TabBarIndicatorSize.label,
@@ -94,6 +101,7 @@ class _Editor extends StatelessWidget {
                 Tab(text: l10n.tabContent),
                 Tab(text: l10n.tabStyle),
                 Tab(text: l10n.tabLayout),
+                Tab(text: l10n.tabLogic),
               ],
             ),
           ),
@@ -104,6 +112,7 @@ class _Editor extends StatelessWidget {
                 _ChipsRow(chips: contentChips, emptyText: l10n.noContentProps),
                 _ChipsRow(chips: styleChips, emptyText: l10n.tapToEdit),
                 _ChipsRow(chips: layoutChips, emptyText: l10n.tapToEdit),
+                _LogicTab(element: element, ed: ed),
               ],
             ),
           ),
@@ -555,6 +564,168 @@ class _ChipsRow extends StatelessWidget {
       itemCount: chips.length,
       separatorBuilder: (_, __) => const SizedBox(width: 8),
       itemBuilder: (_, i) => chips[i],
+    );
+  }
+}
+
+class _LogicTab extends StatelessWidget {
+  const _LogicTab({required this.element, required this.ed});
+  final ElementNode element;
+  final EditorProvider ed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final events = element.type.supportedEvents;
+    if (events.isEmpty) {
+      return Center(
+        child: Text(
+          l10n.noEvents,
+          style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+        ),
+      );
+    }
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      itemCount: events.length,
+      separatorBuilder: (_, __) => const SizedBox(width: 8),
+      itemBuilder: (_, i) {
+        final event = events[i];
+        final wsId = WorkspaceIds.forElement(element.id, event);
+        final ws = ed.project.workspaces[wsId];
+        final configured = ws != null && !ws.isEmpty;
+        return _EventChip(
+          event: event,
+          configured: configured,
+          onTap: () => _openWorkshop(context, event),
+        );
+      },
+    );
+  }
+
+  Future<void> _openWorkshop(BuildContext context, String event) async {
+    final wsId = WorkspaceIds.forElement(element.id, event);
+    final existing = ed.project.workspaces[wsId];
+    final ws = existing ?? _seedWorkspace(wsId, event);
+    ed.project.workspaces[wsId] = ws;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => BlockWorkshopScreen(initial: ws)),
+    );
+
+    // Prune empty hat-only workspaces and notify the host editor so it
+    // can re-render the chip indicator + persist.
+    if (ws.isEmpty || _onlyEmptyHat(ws)) {
+      ed.project.workspaces.remove(wsId);
+    }
+    ed.markBlocksChanged();
+  }
+
+  static BlockWorkspace _seedWorkspace(String id, String event) {
+    final hatId = _hatIdFor(event);
+    final ws = BlockWorkspace(id: id);
+    final hatSpec = BlockRegistry.instance.lookup(hatId);
+    if (hatSpec != null) {
+      ws.roots.add(BlockNode(specId: hatId));
+    }
+    return ws;
+  }
+
+  static String _hatIdFor(String event) {
+    switch (event) {
+      case 'onChange':
+      // Input-style events behave like change-on-keystroke; map them onto the
+      // closest existing hat until dedicated hats are registered.
+      case 'onInput':
+      case 'onFocus':
+      case 'onBlur':
+        return 'on_change';
+      case 'onSubmit':
+        return 'on_submit';
+      case 'onLoad':
+        return 'on_page_load';
+      case 'onClick':
+      // Mouse hover events are bound via the click-style hat for now.
+      case 'onMouseEnter':
+      case 'onMouseLeave':
+      default:
+        return 'on_click';
+    }
+  }
+
+  static bool _onlyEmptyHat(BlockWorkspace ws) {
+    if (ws.roots.length != 1) return false;
+    final root = ws.roots.first;
+    final spec = BlockRegistry.instance.lookup(root.specId);
+    if (spec == null || spec.shape != BlockShape.hat) return false;
+    return root.next == null && ws.variables.isEmpty && ws.functions.isEmpty;
+  }
+}
+
+class _EventChip extends StatelessWidget {
+  const _EventChip({
+    required this.event,
+    required this.configured,
+    required this.onTap,
+  });
+
+  final String event;
+  final bool configured;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final color = configured ? cs.primary : cs.outline;
+    return Material(
+      color: configured
+          ? cs.primary.withOpacity(0.10)
+          : cs.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          width: 132,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: color, width: configured ? 1.6 : 1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    configured ? Icons.bolt : Icons.bolt_outlined,
+                    color: color,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    event,
+                    style: TextStyle(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                configured ? l10n.eventConfigured : l10n.eventEmpty,
+                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

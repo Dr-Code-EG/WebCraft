@@ -5,11 +5,17 @@ import '../models/project.dart';
 /// Pure functions that turn a [Project] / [PageNode] tree into HTML.
 class HtmlGenerator {
   /// Build a complete HTML document for [page].
+  ///
+  /// - [includeStyleSheet] adds a `<link>` tag to the shared stylesheet.
+  /// - [includeMainScript] adds a `<script>` tag pointing at `assets/js/main.js`.
   static String pageDocument(Project project, PageNode page,
-      {bool includeStyleSheet = true}) {
+      {bool includeStyleSheet = true, bool includeMainScript = true}) {
     final body = element(page.root, indent: 2);
     final styleLink = includeStyleSheet
         ? '<link rel="stylesheet" href="assets/css/styles.css">'
+        : '';
+    final scriptTag = includeMainScript
+        ? '<script src="assets/js/main.js" defer></script>'
         : '';
     final title = _escape(page.title.isNotEmpty ? page.title : project.name);
 
@@ -20,6 +26,7 @@ class HtmlGenerator {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>$title</title>
   $styleLink
+  $scriptTag
 </head>
 <body>
 $body
@@ -31,41 +38,39 @@ $body
   /// Render a single [node] (recursively) as HTML, preserving inline styles.
   static String element(ElementNode node, {int indent = 0}) {
     final pad = '  ' * indent;
-    final styleAttr = _styleAttr(node.style);
-    final classAttr = _attr('class', node.props['class']);
-    final idAttr = _attr('id', node.props['id']);
+    final attrs = _baseAttrs(node);
 
     switch (node.type) {
       case ElementType.heading:
         final level = node.props['level'] ?? 'h1';
-        return '$pad<$level$idAttr$classAttr$styleAttr>${_escape(node.props['text'] ?? '')}</$level>';
+        return '$pad<$level$attrs>${_escape(node.props['text'] ?? '')}</$level>';
 
       case ElementType.paragraph:
-        return '$pad<p$idAttr$classAttr$styleAttr>${_escape(node.props['text'] ?? '')}</p>';
+        return '$pad<p$attrs>${_escape(node.props['text'] ?? '')}</p>';
 
       case ElementType.text:
-        return '$pad<span$idAttr$classAttr$styleAttr>${_escape(node.props['text'] ?? '')}</span>';
+        return '$pad<span$attrs>${_escape(node.props['text'] ?? '')}</span>';
 
       case ElementType.button:
         final type = node.props['type'] ?? 'button';
-        return '$pad<button type="$type"$idAttr$classAttr$styleAttr>${_escape(node.props['text'] ?? 'Button')}</button>';
+        return '$pad<button type="$type"$attrs>${_escape(node.props['text'] ?? 'Button')}</button>';
 
       case ElementType.image:
         final src = _escape(node.props['src'] ?? '');
         final alt = _escape(node.props['alt'] ?? '');
-        return '$pad<img src="$src" alt="$alt"$idAttr$classAttr$styleAttr>';
+        return '$pad<img src="$src" alt="$alt"$attrs>';
 
       case ElementType.input:
         final type = node.props['type'] ?? 'text';
         final placeholder = _attr('placeholder', node.props['placeholder']);
         final name = _attr('name', node.props['name']);
-        return '$pad<input type="$type"$name$placeholder$idAttr$classAttr$styleAttr>';
+        return '$pad<input type="$type"$name$placeholder$attrs>';
 
       case ElementType.textarea:
         final placeholder = _attr('placeholder', node.props['placeholder']);
         final rows = _attr('rows', node.props['rows']);
         final name = _attr('name', node.props['name']);
-        return '$pad<textarea$name$placeholder$rows$idAttr$classAttr$styleAttr></textarea>';
+        return '$pad<textarea$name$placeholder$rows$attrs></textarea>';
 
       case ElementType.link:
         final href = _attr('href', node.props['href']);
@@ -73,15 +78,15 @@ $body
             ? _escape(node.props['text'] ?? 'link')
             : _renderChildren(node.children, indent + 1);
         if (node.children.isEmpty) {
-          return '$pad<a$href$idAttr$classAttr$styleAttr>$text</a>';
+          return '$pad<a$href$attrs>$text</a>';
         }
-        return '$pad<a$href$idAttr$classAttr$styleAttr>\n$text\n$pad</a>';
+        return '$pad<a$href$attrs>\n$text\n$pad</a>';
 
       case ElementType.divider:
-        return '$pad<hr$idAttr$classAttr$styleAttr>';
+        return '$pad<hr$attrs>';
 
       case ElementType.spacer:
-        return '$pad<div$idAttr$classAttr$styleAttr></div>';
+        return '$pad<div$attrs></div>';
 
       case ElementType.list:
         final ordered = (node.props['ordered'] ?? 'false') == 'true';
@@ -90,19 +95,19 @@ $body
             .map((c) =>
                 '${'  ' * (indent + 1)}<li>${element(c, indent: 0).trim()}</li>')
             .join('\n');
-        return '$pad<$tag$idAttr$classAttr$styleAttr>\n$items\n$pad</$tag>';
+        return '$pad<$tag$attrs>\n$items\n$pad</$tag>';
 
       case ElementType.video:
         final src = _attr('src', node.props['src']);
         final controls =
             (node.props['controls'] ?? 'true') == 'true' ? ' controls' : '';
-        return '$pad<video$src$controls$idAttr$classAttr$styleAttr></video>';
+        return '$pad<video$src$controls$attrs></video>';
 
       case ElementType.form:
         final action = _attr('action', node.props['action']);
         final method = _attr('method', node.props['method']);
         final inner = _renderChildren(node.children, indent + 1);
-        return '$pad<form$action$method$idAttr$classAttr$styleAttr>\n$inner\n$pad</form>';
+        return '$pad<form$action$method$attrs>\n$inner\n$pad</form>';
 
       case ElementType.container:
       case ElementType.row:
@@ -110,14 +115,25 @@ $body
       case ElementType.card:
         final inner = _renderChildren(node.children, indent + 1);
         if (inner.isEmpty) {
-          return '$pad<div$idAttr$classAttr$styleAttr></div>';
+          return '$pad<div$attrs></div>';
         }
-        return '$pad<div$idAttr$classAttr$styleAttr>\n$inner\n$pad</div>';
+        return '$pad<div$attrs>\n$inner\n$pad</div>';
     }
   }
 
   static String _renderChildren(List<ElementNode> children, int indent) {
     return children.map((c) => element(c, indent: indent)).join('\n');
+  }
+
+  /// Common attributes emitted on every element: id (user-supplied),
+  /// `data-wc-id` (stable internal id used by block-generated handlers),
+  /// class, and inline style.
+  static String _baseAttrs(ElementNode node) {
+    final styleAttr = _styleAttr(node.style);
+    final classAttr = _attr('class', node.props['class']);
+    final idAttr = _attr('id', node.props['id']);
+    final wcId = ' data-wc-id="${_escape(node.id)}"';
+    return '$idAttr$wcId$classAttr$styleAttr';
   }
 
   static String _styleAttr(Map<String, String> style) {
