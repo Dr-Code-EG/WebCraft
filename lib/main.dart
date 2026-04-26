@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'blocks/catalog/block_registry.dart';
 import 'screens/projects_screen.dart';
 import 'services/project_storage.dart';
 import 'state/projects_provider.dart';
@@ -12,6 +13,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settings = SettingsProvider();
   await settings.load();
+  BlockRegistry.instance.seedDefaults();
 
   runApp(WebCraftApp(settings: settings));
 }

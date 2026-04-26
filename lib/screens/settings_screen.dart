@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../blocks/widgets/blocks_preview_screen.dart';
 import '../state/settings_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -63,9 +64,22 @@ class SettingsScreen extends StatelessWidget {
               ),
               const Divider(),
               ListTile(
+                leading: const Icon(Icons.extension_outlined),
+                title: const Text('Blocks Preview (Phase B0)'),
+                subtitle:
+                    const Text('Visual sandbox for the upcoming block system'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) => const BlocksPreviewScreen(),
+                  ));
+                },
+              ),
+              const Divider(),
+              ListTile(
                 leading: const Icon(Icons.info_outline),
                 title: Text(l10n.about),
-                subtitle: const Text('WebCraft v0.4.0'),
+                subtitle: const Text('WebCraft v0.5.0-alpha'),
               ),
             ],
           );

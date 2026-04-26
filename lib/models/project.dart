@@ -1,5 +1,6 @@
 import 'package:uuid/uuid.dart';
 
+import '../blocks/model/block_workspace.dart';
 import 'element_node.dart';
 import 'page_node.dart';
 
@@ -14,6 +15,7 @@ class Project {
     DateTime? updatedAt,
     List<PageNode>? pages,
     String? activePageId,
+    Map<String, BlockWorkspace>? workspaces,
   })  : id = id ?? _uuid.v4(),
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now(),
@@ -25,7 +27,8 @@ class Project {
                 title: name,
                 root: ElementNode.defaults(ElementType.container),
               )
-            ] {
+            ],
+        workspaces = workspaces ?? <String, BlockWorkspace>{} {
     this.activePageId = activePageId ?? this.pages.first.id;
   }
 
@@ -35,6 +38,10 @@ class Project {
   DateTime updatedAt;
   final List<PageNode> pages;
   late String activePageId;
+
+  /// Block-editor workspaces keyed by [WorkspaceIds.forPage] /
+  /// [WorkspaceIds.forElement]. Empty workspaces are pruned on save.
+  final Map<String, BlockWorkspace> workspaces;
 
   PageNode get activePage =>
       pages.firstWhere((p) => p.id == activePageId, orElse: () => pages.first);
@@ -46,6 +53,10 @@ class Project {
         'updatedAt': updatedAt.toIso8601String(),
         'activePageId': activePageId,
         'pages': pages.map((p) => p.toJson()).toList(),
+        'workspaces': {
+          for (final e in workspaces.entries)
+            if (!e.value.isEmpty) e.key: e.value.toJson(),
+        },
       };
 
   factory Project.fromJson(Map<String, dynamic> json) {
@@ -53,6 +64,14 @@ class Project {
             ?.map((p) => PageNode.fromJson(p as Map<String, dynamic>))
             .toList() ??
         <PageNode>[];
+    final workspaces = <String, BlockWorkspace>{};
+    final ws = json['workspaces'] as Map?;
+    if (ws != null) {
+      ws.forEach((k, v) {
+        workspaces[k as String] =
+            BlockWorkspace.fromJson(v as Map<String, dynamic>);
+      });
+    }
     return Project(
       id: json['id'] as String?,
       name: json['name'] as String? ?? 'Untitled',
@@ -60,6 +79,7 @@ class Project {
       updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
       pages: pages.isEmpty ? null : pages,
       activePageId: json['activePageId'] as String?,
+      workspaces: workspaces,
     );
   }
 }

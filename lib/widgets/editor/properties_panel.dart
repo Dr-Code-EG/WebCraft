@@ -579,7 +579,7 @@ class _PropChip extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final hasValue = value.trim().isNotEmpty;
     return SizedBox(
-      width: 132,
+      width: 116,
       child: Material(
         color: cs.surface,
         shape: RoundedRectangleBorder(
