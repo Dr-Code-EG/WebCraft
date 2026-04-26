@@ -151,6 +151,15 @@
   "tabContent": "Content",
   "tabStyle": "Style",
   "tabLayout": "Layout",
+  "tabLogic": "Logic",
+  "noEvents": "This element has no events",
+  "openWorkshopFor": "Open Workshop for {event}",
+  "@openWorkshopFor": {
+    "placeholders": { "event": { "type": "String" } }
+  },
+  "eventConfigured": "Configured",
+  "eventEmpty": "Empty",
+  "blockWorkshopTitle": "Block Workshop",
   "editProperty": "Edit {property}",
   "@editProperty": {
     "placeholders": { "property": { "type": "String" } }

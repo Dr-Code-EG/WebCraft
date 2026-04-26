@@ -85,6 +85,34 @@ extension ElementTypeX on ElementType {
         return false;
     }
   }
+
+  /// DOM events that make sense for this element kind in the visual editor.
+  /// Keys returned here are the *logical* event names (e.g. `onClick`); the
+  /// JS generator maps them to actual DOM event names.
+  List<String> get supportedEvents {
+    const universal = ['onClick', 'onMouseEnter', 'onMouseLeave'];
+    switch (this) {
+      case ElementType.input:
+      case ElementType.textarea:
+        return const [
+          'onChange',
+          'onInput',
+          'onFocus',
+          'onBlur',
+          ...universal,
+        ];
+      case ElementType.form:
+        return const ['onSubmit', 'onChange', ...universal];
+      case ElementType.button:
+      case ElementType.link:
+        return universal;
+      case ElementType.image:
+      case ElementType.video:
+        return const ['onLoad', ...universal];
+      default:
+        return universal;
+    }
+  }
 }
 
 /// A node in the page element tree. Holds type, properties, style, and children.
