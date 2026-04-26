@@ -115,7 +115,7 @@ class _EditorScreenState extends State<EditorScreen> {
   }
 
   /// Tablet / desktop layout: canvas + properties stacked on the left,
-  /// vertical element library pinned to the right.
+  /// full-width element library pinned to the right (icon + label).
   Widget _wideLayout() {
     return const Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -130,12 +130,15 @@ class _EditorScreenState extends State<EditorScreen> {
           ),
         ),
         VerticalDivider(width: 1),
-        SizedBox(width: 240, child: ElementLibrary()),
+        SizedBox(
+          width: 240,
+          child: ElementLibrary(mode: ElementLibraryMode.full),
+        ),
       ],
     );
   }
 
-  /// Phone layout: canvas + bottom properties + a slim vertical
+  /// Phone layout: canvas + bottom properties + a slim icon-only
   /// element rail anchored to the right edge (Sketchware-style).
   Widget _phoneLayout() {
     return const Row(
@@ -151,7 +154,10 @@ class _EditorScreenState extends State<EditorScreen> {
           ),
         ),
         VerticalDivider(width: 1),
-        SizedBox(width: 132, child: ElementLibrary()),
+        SizedBox(
+          width: 64,
+          child: ElementLibrary(mode: ElementLibraryMode.compact),
+        ),
       ],
     );
   }
