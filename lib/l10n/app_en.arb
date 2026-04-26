@@ -131,8 +131,6 @@
   "welcomeSubtitle": "Build beautiful websites by dragging elements — no code needed",
   "getStarted": "Get started",
 
-  "comingSoon": "Coming soon",
-  "blocksComingSoon": "Block editor (JavaScript / PHP / MySQL) coming in the next phase",
   "untitledProject": "Untitled project",
   "homePage": "Home",
 
@@ -141,27 +139,25 @@
   "categoryForm": "FORMS",
   "categoryMisc": "OTHER",
 
-  "events": "Events",
-  "blockLogic": "Block logic",
-  "pageLogic": "Page logic",
-  "onLoad": "On load",
-  "onClick": "On click",
-  "onChange": "On change",
-  "onSubmit": "On submit",
-  "editBlocks": "Edit blocks",
-  "clearBlocks": "Clear blocks",
-  "blocksConfigured": "Configured",
-  "blocksEmpty": "Not set",
-  "blockEditorTitle": "Block editor — {event}",
-  "@blockEditorTitle": {
-    "placeholders": { "event": { "type": "String" } }
-  },
-
   "yes": "Yes",
   "no": "No",
   "ok": "OK",
+  "apply": "Apply",
   "back": "Back",
   "done": "Done",
   "edit": "Edit",
-  "reset": "Reset"
+  "reset": "Reset",
+  "clear": "Clear",
+  "tabContent": "Content",
+  "tabStyle": "Style",
+  "tabLayout": "Layout",
+  "editProperty": "Edit {property}",
+  "@editProperty": {
+    "placeholders": { "property": { "type": "String" } }
+  },
+  "elementActions": "Actions",
+  "addInside": "Add inside",
+  "selectElement": "Select an element on the canvas to edit it",
+  "tapToEdit": "Tap a property to edit it",
+  "noContentProps": "This element has no content properties"
 }

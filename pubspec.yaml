@@ -1,8 +1,8 @@
 name: webcraft
-description: "WebCraft - Visual website builder with drag-and-drop and block-based programming"
+description: "WebCraft - Sketchware-style visual website builder for Android with drag-and-drop and dialog-based property editing."
 publish_to: 'none'
 
-version: 0.3.0+3
+version: 0.4.0+4
 
 environment:
   sdk: ^3.5.4
@@ -50,5 +50,4 @@ flutter:
   generate: true
 
   assets:
-    - assets/blockly/
     - assets/icon/

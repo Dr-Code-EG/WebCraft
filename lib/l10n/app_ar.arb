@@ -123,8 +123,6 @@
   "welcomeSubtitle": "صمّم مواقع جميلة عبر سحب العناصر — بدون أي كود",
   "getStarted": "ابدأ الآن",
 
-  "comingSoon": "قريباً",
-  "blocksComingSoon": "محرر البلوكات (JavaScript / PHP / MySQL) في المرحلة القادمة",
   "untitledProject": "مشروع بدون اسم",
   "homePage": "الرئيسية",
 
@@ -133,27 +131,25 @@
   "categoryForm": "نماذج",
   "categoryMisc": "متنوع",
 
-  "events": "الأحداث",
-  "blockLogic": "منطق البلوكات",
-  "pageLogic": "منطق الصفحة",
-  "onLoad": "عند التحميل",
-  "onClick": "عند النقر",
-  "onChange": "عند التغيير",
-  "onSubmit": "عند الإرسال",
-  "editBlocks": "تعديل البلوكات",
-  "clearBlocks": "مسح البلوكات",
-  "blocksConfigured": "مُعدّ",
-  "blocksEmpty": "غير مُعدّ",
-  "blockEditorTitle": "محرّر البلوكات — {event}",
-  "@blockEditorTitle": {
-    "placeholders": { "event": { "type": "String" } }
-  },
-
   "yes": "نعم",
   "no": "لا",
   "ok": "حسناً",
+  "apply": "تطبيق",
   "back": "رجوع",
   "done": "تم",
   "edit": "تعديل",
-  "reset": "إعادة تعيين"
+  "reset": "إعادة تعيين",
+  "clear": "مسح",
+  "tabContent": "المحتوى",
+  "tabStyle": "التنسيق",
+  "tabLayout": "التخطيط",
+  "editProperty": "تعديل {property}",
+  "@editProperty": {
+    "placeholders": { "property": { "type": "String" } }
+  },
+  "elementActions": "إجراءات",
+  "addInside": "إضافة بالداخل",
+  "selectElement": "اختر عنصراً من اللوحة لتعديله",
+  "tapToEdit": "اضغط على خاصية لتعديلها",
+  "noContentProps": "هذا العنصر ليس له خصائص محتوى"
 }

@@ -1,19 +1,16 @@
 # WebCraft
 
-تطبيق Android لبناء المواقع بصرياً عبر السحب والإفلات ونظام البلوكات.
-مستوحى من Sketchware لكن للويب.
+تطبيق Android لبناء المواقع بصرياً عبر السحب والإفلات بأسلوب Sketchware للويب.
 
-WebCraft is an Android app that lets you build real websites visually — drag elements onto a canvas, customize their style, preview live, and export a ready-to-host website as a ZIP. Inspired by Sketchware, but for the web.
+WebCraft is an Android app that lets you build real websites visually — drag elements onto a canvas, customize their style with focused dialogs, preview live, and export a ready-to-host website as a ZIP. Sketchware-style UX, for the web.
 
-## ✨ MVP features (this PR — Phases 0 + 1)
+## ✨ Features
 
 - 📂 **Project manager** — create, rename, delete, and reopen projects (saved locally on the device).
-- 🎨 **Visual editor** — drag-and-drop / tap-to-add for **17 HTML element types** (container, row, column, heading, paragraph, text, button, image, input, textarea, form, link, divider, spacer, card, list, video).
+- 🎨 **Sketchware-style editor** — vertical element library on the right, canvas in the center, properties strip pinned to the bottom. Tap any property chip to open a focused edit dialog.
+- 🧩 **17 HTML element types** — container, row, column, heading, paragraph, text, button, image, input, textarea, form, link, divider, spacer, card, list, video.
 - 🌳 **Component tree** — browse and select elements hierarchically.
-- 🎛️ **Properties panel** — full per-element editing of:
-  - Content props (text, src, href, placeholder, alt, etc.)
-  - CSS-style properties (background, color, padding, margin, width, height, font-size, font-weight, text-align, border-radius, border, etc.)
-  - HTML attributes (id, class)
+- 🎛️ **Property dialogs** — edit content (text, src, href, placeholder, alt, …), style (background, color, font, border, …), and layout (width, height, padding, margin, gap) one focused dialog at a time, with color swatches for color picks.
 - 📱 **Live preview** in WebView with the generated HTML/CSS, page switcher.
 - 📦 **Export to ZIP** — full static site (`public/index.html` + `public/assets/css/styles.css` + per-page HTML), plus a re-importable `project.webcraft.json`. Shared via the Android share sheet.
 - 🌐 **Bilingual UI** — Arabic + English with RTL support, switchable from settings.
@@ -22,10 +19,8 @@ WebCraft is an Android app that lets you build real websites visually — drag e
 
 ## 🚧 Roadmap
 
-- **Phase 2 — Block logic editor** (Blockly-style): variables, logic, loops, DOM events → JavaScript code generator.
-- **Phase 3 — Server logic + database**: visual MySQL schema designer + PHP endpoint blocks → generated PHP/SQL files.
-- **Phase 4 — Cloud sandbox**: optional run-button that spins up PHP+MySQL on a remote container so users can fully test their site from the device.
-- **Phase 5 — Templates marketplace + responsive design controls + plugins**.
+- **Cloud sandbox** — optional run-button that spins up PHP+MySQL on a remote container so users can fully test their site from the device.
+- **Templates marketplace + responsive design controls + plugins**.
 
 ## 🧱 Stack
 
