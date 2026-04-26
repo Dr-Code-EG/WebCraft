@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../catalog/block_registry.dart';
 import '../model/block_node.dart';
+import '../model/block_spec.dart';
 import '../model/block_types.dart';
 import '../model/block_workspace.dart';
 
@@ -304,13 +305,18 @@ class BlockWorkspaceController extends ChangeNotifier {
     final v = workspace.variables.where((v) => v.name == oldName).firstOrNull;
     if (v == null) return false;
     v.name = trimmed;
-    // Update all references in field values that reference this variable.
+    // Update only variable-kind field values that reference this variable —
+    // text/element/dropdown fields that happen to hold the same string must
+    // not be silently rewritten.
     for (final root in workspace.roots) {
       for (final n in root.walk()) {
+        final spec = BlockRegistry.instance.lookup(n.specId);
+        if (spec == null) continue;
         for (final entry in List.of(n.fieldValues.entries)) {
-          if (entry.value == oldName) {
-            n.fieldValues[entry.key] = trimmed;
-          }
+          if (entry.value != oldName) continue;
+          final fieldSpec = spec.field(entry.key);
+          if (fieldSpec?.kind != BlockFieldKind.variable) continue;
+          n.fieldValues[entry.key] = trimmed;
         }
       }
     }

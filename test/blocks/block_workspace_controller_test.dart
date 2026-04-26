@@ -149,6 +149,28 @@ void main() {
       expect(c.workspace.variables, isEmpty);
     });
 
+    test('renameVariable updates only variable-kind field values', () {
+      // dom_set_style has a `prop` text field with default 'color'. A
+      // variable named 'color' renamed to 'hue' must NOT touch the text field.
+      final c = BlockWorkspaceController(BlockWorkspace(id: 't'));
+      c.addVariable('color');
+      final styleNode = BlockNode(specId: 'dom_set_style');
+      c.addRootAt(styleNode, 0, 0);
+      // Manually set the prop text field to 'color' — same string as the var.
+      c.setField(styleNode.id, 'prop', 'color');
+      // And a real variable reference via set_var.
+      final setNode = BlockNode(specId: 'set_var');
+      c.addRootAt(setNode, 0, 0);
+      c.setField(setNode.id, 'name', 'color');
+
+      expect(c.renameVariable('color', 'hue'), true);
+
+      // The set_var.name (BlockFieldKind.variable) should be renamed.
+      expect(setNode.fieldValues['name'], 'hue');
+      // The dom_set_style.prop (BlockFieldKind.text) must be untouched.
+      expect(styleNode.fieldValues['prop'], 'color');
+    });
+
     test('addVariable rejects empty name', () {
       final c = BlockWorkspaceController(BlockWorkspace(id: 't'));
       expect(c.addVariable(''), false);
