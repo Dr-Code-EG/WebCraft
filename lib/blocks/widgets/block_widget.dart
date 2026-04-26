@@ -184,7 +184,7 @@ class _MouthRender extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(left: 12, top: -2),
+      margin: const EdgeInsets.only(left: 12),
       padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
       decoration: BoxDecoration(
         border: Border(
