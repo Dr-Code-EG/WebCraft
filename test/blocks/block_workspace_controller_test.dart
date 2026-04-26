@@ -84,6 +84,42 @@ void main() {
       expect(c.workspace.roots.last.x, 100);
     });
 
+    test('moveToRoot preserves the dragged node\'s next chain', () {
+      // A → B → C ;  drag B to canvas → expect A alone + B→C as new root.
+      final c = BlockWorkspaceController(BlockWorkspace(id: 't'));
+      final a = BlockNode(specId: 'on_page_load');
+      c.addRootAt(a, 0, 0);
+      final b = BlockNode(specId: 'set_var');
+      c.insertAsNext(a.id, b);
+      final ccc = BlockNode(specId: 'set_var');
+      c.insertAsNext(b.id, ccc);
+      // sanity
+      expect(a.next?.id, b.id);
+      expect(b.next?.id, ccc.id);
+
+      c.moveToRoot(b.id, 50, 60);
+      expect(a.next, isNull, reason: 'A should be detached from B');
+      expect(b.next?.id, ccc.id, reason: 'B should still own C');
+      expect(c.workspace.roots.length, 2);
+    });
+
+    test('delete removes the entire subtree including the next chain', () {
+      // A → B → C ; delete B → only A remains.
+      final c = BlockWorkspaceController(BlockWorkspace(id: 't'));
+      final a = BlockNode(specId: 'on_page_load');
+      c.addRootAt(a, 0, 0);
+      final b = BlockNode(specId: 'set_var');
+      c.insertAsNext(a.id, b);
+      final ccc = BlockNode(specId: 'set_var');
+      c.insertAsNext(b.id, ccc);
+
+      c.delete(b.id);
+      expect(c.workspace.roots.length, 1);
+      expect(a.next, isNull);
+      // C should not have re-appeared as a root.
+      expect(c.findById(ccc.id), isNull);
+    });
+
     test('delete removes the subtree', () {
       final c = BlockWorkspaceController(BlockWorkspace(id: 't'));
       final hat = BlockNode(specId: 'on_page_load');

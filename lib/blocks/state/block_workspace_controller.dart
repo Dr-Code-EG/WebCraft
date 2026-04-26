@@ -102,9 +102,14 @@ class BlockWorkspaceController extends ChangeNotifier {
   // Attach / detach primitives
   // -------------------------------------------------------------------------
 
-  /// Splice `node` (and its full `next` chain) out of its current parent.
-  /// The returned subtree is detached but its own children/`next` remain
-  /// intact. Position fields (`x`, `y`) are preserved.
+  /// Splice `node` out of its current parent and return it. The detached
+  /// subtree keeps its own children and full `next` chain intact, so callers
+  /// (move/insert ops) can reattach the entire stack at once.
+  ///
+  /// Note: when detaching from a next-link (e.g. removing B from A→B→C),
+  /// the parent's chain is truncated (A.next = null). The returned node
+  /// still owns B→C; callers wanting to splice B out while preserving A→C
+  /// must save `loc.node.next` first and reattach it themselves.
   BlockNode? _detach(String id) {
     final loc = _locate(id);
     if (loc == null) return null;
@@ -113,8 +118,7 @@ class BlockWorkspaceController extends ChangeNotifier {
         workspace.roots.removeAt(loc.rootIndex!);
         break;
       case _ParentKind.next:
-        loc.parent!.next = loc.node.next;
-        loc.node.next = null;
+        loc.parent!.next = null;
         break;
       case _ParentKind.slot:
         loc.parent!.slotChildren[loc.key!] = null;

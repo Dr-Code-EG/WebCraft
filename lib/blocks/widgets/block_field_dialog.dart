@@ -13,28 +13,30 @@ Future<String?> editBlockField(
   required BlockFieldSpec field,
   required BlockWorkspace workspace,
 }) async {
+  final current = node.fieldValues[field.name] ?? field.defaultValue;
   switch (field.kind) {
     case BlockFieldKind.text:
-      return _editText(context, field, multiline: false);
+      return _editText(context, field, current: current, multiline: false);
     case BlockFieldKind.number:
-      return _editNumber(context, field);
+      return _editNumber(context, field, current: current);
     case BlockFieldKind.dropdown:
-      return _editDropdown(context, field);
+      return _editDropdown(context, field, current: current);
     case BlockFieldKind.color:
-      return _editColor(context, field);
+      return _editColor(context, field, current: current);
     case BlockFieldKind.element:
-      return _editText(context, field);
+      return _editText(context, field, current: current);
     case BlockFieldKind.variable:
-      return _editVariable(context, field, workspace);
+      return _editVariable(context, field, workspace, current: current);
   }
 }
 
 Future<String?> _editText(
   BuildContext context,
   BlockFieldSpec field, {
+  String current = '',
   bool multiline = false,
 }) async {
-  final controller = TextEditingController(text: field.defaultValue);
+  final controller = TextEditingController(text: current);
   return showDialog<String>(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -64,9 +66,10 @@ Future<String?> _editText(
 
 Future<String?> _editNumber(
   BuildContext context,
-  BlockFieldSpec field,
-) async {
-  final controller = TextEditingController(text: field.defaultValue);
+  BlockFieldSpec field, {
+  String current = '',
+}) async {
+  final controller = TextEditingController(text: current);
   return showDialog<String>(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -97,8 +100,9 @@ Future<String?> _editNumber(
 
 Future<String?> _editDropdown(
   BuildContext context,
-  BlockFieldSpec field,
-) async {
+  BlockFieldSpec field, {
+  String current = '',
+}) async {
   return showDialog<String>(
     context: context,
     builder: (ctx) => SimpleDialog(
@@ -107,7 +111,18 @@ Future<String?> _editDropdown(
         for (final opt in field.options)
           SimpleDialogOption(
             onPressed: () => Navigator.pop(ctx, opt),
-            child: Text(opt),
+            child: Row(
+              children: [
+                Icon(
+                  opt == current
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(opt),
+              ],
+            ),
           ),
       ],
     ),
@@ -122,8 +137,9 @@ const _kSwatches = <String>[
 
 Future<String?> _editColor(
   BuildContext context,
-  BlockFieldSpec field,
-) async {
+  BlockFieldSpec field, {
+  String current = '',
+}) async {
   return showDialog<String>(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -164,10 +180,11 @@ Future<String?> _editColor(
 Future<String?> _editVariable(
   BuildContext context,
   BlockFieldSpec field,
-  BlockWorkspace workspace,
-) async {
+  BlockWorkspace workspace, {
+  String current = '',
+}) async {
   if (workspace.variables.isEmpty) {
-    return _editText(context, field);
+    return _editText(context, field, current: current);
   }
   return showDialog<String>(
     context: context,
