@@ -21,50 +21,66 @@ class CanvasView extends StatelessWidget {
         children: [
           const _CanvasToolbar(),
           Expanded(
-            child: Consumer<EditorProvider>(
-              builder: (context, ed, _) {
-                final root = ed.activePage.root;
-                return ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 420),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
-                                blurRadius: 24,
-                                offset: const Offset(0, 8),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              // Tap on the empty backdrop clears the current selection so the
+              // properties panel returns to its empty state.
+              onTap: () {
+                final ed =
+                    Provider.of<EditorProvider>(context, listen: false);
+                ed.select(null);
+              },
+              child: Consumer<EditorProvider>(
+                builder: (context, ed, _) {
+                  final root = ed.activePage.root;
+                  return ListView(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+                    children: [
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 420),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: ConstrainedBox(
+                                // Keeps an empty page visibly tall so the
+                                // drop-target hit-area is generous.
+                                constraints:
+                                    const BoxConstraints(minHeight: 360),
+                                child: _ElementWidget(
+                                  node: root,
+                                  isRoot: true,
+                                ),
                               ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(8),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: _ElementWidget(
-                              node: root,
-                              isRoot: true,
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Center(
-                      child: Text(
-                        l10n.dragToCanvas,
-                        style:
-                            TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: Text(
+                          l10n.dragToCanvas,
+                          style: TextStyle(
+                              color: cs.onSurfaceVariant, fontSize: 12),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
-                );
-              },
+                      const SizedBox(height: 32),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -213,18 +229,26 @@ class _ElementWidget extends StatelessWidget {
 
     final inner = _renderInner(context, node);
 
+    final cs = Theme.of(context).colorScheme;
     Widget wrapped = GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => ed.select(node.id),
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(
-            color: selected
-                ? Theme.of(context).colorScheme.primary
-                : Colors.transparent,
-            width: 2,
+            color: selected ? cs.primary : Colors.transparent,
+            width: selected ? 2.4 : 2,
           ),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: cs.primary.withOpacity(0.18),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
         ),
         margin:
             isRoot ? EdgeInsets.zero : const EdgeInsets.symmetric(vertical: 2),
@@ -240,15 +264,16 @@ class _ElementWidget extends StatelessWidget {
         },
         builder: (context, candidate, rejected) {
           final hovering = candidate.isNotEmpty;
-          return Container(
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
             decoration: BoxDecoration(
-              color: hovering
-                  ? Theme.of(context)
-                      .colorScheme
-                      .primaryContainer
-                      .withOpacity(0.2)
-                  : null,
-              borderRadius: BorderRadius.circular(4),
+              color: hovering ? cs.primary.withOpacity(0.12) : null,
+              border: Border.all(
+                color: hovering ? cs.primary : Colors.transparent,
+                width: hovering ? 2 : 0,
+                style: BorderStyle.solid,
+              ),
+              borderRadius: BorderRadius.circular(6),
             ),
             child: wrapped,
           );
@@ -629,21 +654,39 @@ class _DropPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      constraints: const BoxConstraints(minHeight: 140),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHigh.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(8),
+        color: cs.primary.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: cs.outlineVariant,
-          style: BorderStyle.solid,
+          color: cs.primary.withOpacity(0.35),
+          width: 1.4,
         ),
       ),
-      child: Text(
-        AppLocalizations.of(context)!.dragToCanvas,
-        style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.touch_app_outlined,
+            color: cs.primary.withOpacity(0.7),
+            size: 28,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.dragToCanvas,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: cs.primary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
