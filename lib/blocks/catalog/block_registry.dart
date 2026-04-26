@@ -80,6 +80,48 @@ const List<BlockSpec> _seed = [
       ),
     ],
   ),
+  BlockSpec(
+    id: 'on_change',
+    category: BlockCategory.events,
+    shape: BlockShape.hat,
+    returnType: BlockType.voidT,
+    template: 'When %target changed',
+    fields: [
+      BlockFieldSpec(
+        name: 'target',
+        kind: BlockFieldKind.element,
+        defaultValue: 'self',
+      ),
+    ],
+  ),
+  BlockSpec(
+    id: 'on_submit',
+    category: BlockCategory.events,
+    shape: BlockShape.hat,
+    returnType: BlockType.voidT,
+    template: 'When %target submitted',
+    fields: [
+      BlockFieldSpec(
+        name: 'target',
+        kind: BlockFieldKind.element,
+        defaultValue: 'self',
+      ),
+    ],
+  ),
+  BlockSpec(
+    id: 'on_interval',
+    category: BlockCategory.events,
+    shape: BlockShape.hat,
+    returnType: BlockType.voidT,
+    template: 'Every %ms ms',
+    fields: [
+      BlockFieldSpec(
+        name: 'ms',
+        kind: BlockFieldKind.number,
+        defaultValue: '1000',
+      ),
+    ],
+  ),
 
   // ---- Variables
   BlockSpec(
@@ -230,6 +272,267 @@ const List<BlockSpec> _seed = [
         kind: BlockFieldKind.element,
         defaultValue: 'self',
       ),
+    ],
+  ),
+  BlockSpec(
+    id: 'dom_set_style',
+    category: BlockCategory.dom,
+    shape: BlockShape.statement,
+    returnType: BlockType.voidT,
+    template: 'set %target style %prop to %value',
+    fields: [
+      BlockFieldSpec(
+        name: 'target',
+        kind: BlockFieldKind.element,
+        defaultValue: 'self',
+      ),
+      BlockFieldSpec(
+        name: 'prop',
+        kind: BlockFieldKind.text,
+        defaultValue: 'color',
+      ),
+    ],
+    slots: [
+      BlockSlotSpec(name: 'value', accepts: BlockType.text),
+    ],
+  ),
+  BlockSpec(
+    id: 'dom_show_hide',
+    category: BlockCategory.dom,
+    shape: BlockShape.statement,
+    returnType: BlockType.voidT,
+    template: '%action %target',
+    fields: [
+      BlockFieldSpec(
+        name: 'action',
+        kind: BlockFieldKind.dropdown,
+        options: ['show', 'hide'],
+        defaultValue: 'show',
+      ),
+      BlockFieldSpec(
+        name: 'target',
+        kind: BlockFieldKind.element,
+        defaultValue: 'self',
+      ),
+    ],
+  ),
+  BlockSpec(
+    id: 'dom_add_class',
+    category: BlockCategory.dom,
+    shape: BlockShape.statement,
+    returnType: BlockType.voidT,
+    template: '%action class %name on %target',
+    fields: [
+      BlockFieldSpec(
+        name: 'action',
+        kind: BlockFieldKind.dropdown,
+        options: ['add', 'remove', 'toggle'],
+        defaultValue: 'add',
+      ),
+      BlockFieldSpec(
+        name: 'name',
+        kind: BlockFieldKind.text,
+        defaultValue: 'active',
+      ),
+      BlockFieldSpec(
+        name: 'target',
+        kind: BlockFieldKind.element,
+        defaultValue: 'self',
+      ),
+    ],
+  ),
+
+  // ---- Loops
+  BlockSpec(
+    id: 'while_loop',
+    category: BlockCategory.logic,
+    shape: BlockShape.cBlock,
+    returnType: BlockType.voidT,
+    template: 'while %cond',
+    slots: [
+      BlockSlotSpec(name: 'cond', accepts: BlockType.boolean),
+    ],
+    mouths: [
+      BlockMouthSpec(name: 'body'),
+    ],
+  ),
+  BlockSpec(
+    id: 'repeat_n',
+    category: BlockCategory.logic,
+    shape: BlockShape.cBlock,
+    returnType: BlockType.voidT,
+    template: 'repeat %count times',
+    slots: [
+      BlockSlotSpec(name: 'count', accepts: BlockType.number),
+    ],
+    mouths: [
+      BlockMouthSpec(name: 'body'),
+    ],
+  ),
+  BlockSpec(
+    id: 'logic_andor',
+    category: BlockCategory.logic,
+    shape: BlockShape.expression,
+    returnType: BlockType.boolean,
+    template: '%a %op %b',
+    fields: [
+      BlockFieldSpec(
+        name: 'op',
+        kind: BlockFieldKind.dropdown,
+        options: ['and', 'or'],
+        defaultValue: 'and',
+      ),
+    ],
+    slots: [
+      BlockSlotSpec(name: 'a', accepts: BlockType.boolean),
+      BlockSlotSpec(name: 'b', accepts: BlockType.boolean),
+    ],
+  ),
+  BlockSpec(
+    id: 'logic_not',
+    category: BlockCategory.logic,
+    shape: BlockShape.expression,
+    returnType: BlockType.boolean,
+    template: 'not %a',
+    slots: [
+      BlockSlotSpec(name: 'a', accepts: BlockType.boolean),
+    ],
+  ),
+
+  // ---- Text helpers
+  BlockSpec(
+    id: 'text_concat',
+    category: BlockCategory.text,
+    shape: BlockShape.expression,
+    returnType: BlockType.text,
+    template: '%a join %b',
+    slots: [
+      BlockSlotSpec(name: 'a', accepts: BlockType.any),
+      BlockSlotSpec(name: 'b', accepts: BlockType.any),
+    ],
+  ),
+  BlockSpec(
+    id: 'text_length',
+    category: BlockCategory.text,
+    shape: BlockShape.expression,
+    returnType: BlockType.number,
+    template: 'length of %s',
+    slots: [
+      BlockSlotSpec(name: 's', accepts: BlockType.text),
+    ],
+  ),
+
+  // ---- Lists
+  BlockSpec(
+    id: 'list_create',
+    category: BlockCategory.lists,
+    shape: BlockShape.expression,
+    returnType: BlockType.list,
+    template: 'empty list',
+  ),
+  BlockSpec(
+    id: 'list_add',
+    category: BlockCategory.lists,
+    shape: BlockShape.statement,
+    returnType: BlockType.voidT,
+    template: 'add %item to %list',
+    slots: [
+      BlockSlotSpec(name: 'item', accepts: BlockType.any),
+      BlockSlotSpec(name: 'list', accepts: BlockType.list),
+    ],
+  ),
+  BlockSpec(
+    id: 'list_length',
+    category: BlockCategory.lists,
+    shape: BlockShape.expression,
+    returnType: BlockType.number,
+    template: 'length of %list',
+    slots: [
+      BlockSlotSpec(name: 'list', accepts: BlockType.list),
+    ],
+  ),
+  BlockSpec(
+    id: 'list_get',
+    category: BlockCategory.lists,
+    shape: BlockShape.expression,
+    returnType: BlockType.any,
+    template: 'item %i of %list',
+    slots: [
+      BlockSlotSpec(name: 'i', accepts: BlockType.number),
+      BlockSlotSpec(name: 'list', accepts: BlockType.list),
+    ],
+  ),
+
+  // ---- HTTP
+  BlockSpec(
+    id: 'http_get',
+    category: BlockCategory.http,
+    shape: BlockShape.expression,
+    returnType: BlockType.text,
+    template: 'fetch %url',
+    slots: [
+      BlockSlotSpec(name: 'url', accepts: BlockType.text),
+    ],
+  ),
+
+  // ---- Storage
+  BlockSpec(
+    id: 'storage_set',
+    category: BlockCategory.storage,
+    shape: BlockShape.statement,
+    returnType: BlockType.voidT,
+    template: 'save %key = %value',
+    fields: [
+      BlockFieldSpec(
+        name: 'key',
+        kind: BlockFieldKind.text,
+        defaultValue: 'key',
+      ),
+    ],
+    slots: [
+      BlockSlotSpec(name: 'value', accepts: BlockType.any),
+    ],
+  ),
+  BlockSpec(
+    id: 'storage_get',
+    category: BlockCategory.storage,
+    shape: BlockShape.expression,
+    returnType: BlockType.text,
+    template: 'load %key',
+    fields: [
+      BlockFieldSpec(
+        name: 'key',
+        kind: BlockFieldKind.text,
+        defaultValue: 'key',
+      ),
+    ],
+  ),
+
+  // ---- Animation
+  BlockSpec(
+    id: 'wait_ms',
+    category: BlockCategory.animation,
+    shape: BlockShape.statement,
+    returnType: BlockType.voidT,
+    template: 'wait %ms ms',
+    fields: [
+      BlockFieldSpec(
+        name: 'ms',
+        kind: BlockFieldKind.number,
+        defaultValue: '500',
+      ),
+    ],
+  ),
+
+  // ---- Functions
+  BlockSpec(
+    id: 'fn_return',
+    category: BlockCategory.functions,
+    shape: BlockShape.cap,
+    returnType: BlockType.voidT,
+    template: 'return %value',
+    slots: [
+      BlockSlotSpec(name: 'value', accepts: BlockType.any),
     ],
   ),
 ];

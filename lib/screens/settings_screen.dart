@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../blocks/widgets/block_workshop_screen.dart';
 import '../blocks/widgets/blocks_preview_screen.dart';
 import '../state/settings_provider.dart';
 
@@ -64,10 +65,22 @@ class SettingsScreen extends StatelessWidget {
               ),
               const Divider(),
               ListTile(
+                leading: const Icon(Icons.handyman_outlined),
+                title: const Text('Block Workshop'),
+                subtitle: const Text(
+                    'Drag, snap & edit blocks in a Flutter-native workspace'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) => const BlockWorkshopScreen(),
+                  ));
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.extension_outlined),
-                title: const Text('Blocks Preview (Phase B0)'),
-                subtitle:
-                    const Text('Visual sandbox for the upcoming block system'),
+                title: const Text('Blocks Preview (read-only)'),
+                subtitle: const Text(
+                    'Static gallery of every registered BlockSpec'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.of(context).push(MaterialPageRoute<void>(
@@ -79,7 +92,7 @@ class SettingsScreen extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.info_outline),
                 title: Text(l10n.about),
-                subtitle: const Text('WebCraft v0.5.0-alpha'),
+                subtitle: const Text('WebCraft v0.5.0-beta'),
               ),
             ],
           );
