@@ -170,15 +170,9 @@ class _Editor extends StatelessWidget {
       case ElementType.input:
         addText(l10n.propPlaceholder, 'placeholder');
         addText('Name', 'name');
-        addEnum('Type', 'type', const [
-          'text',
-          'email',
-          'password',
-          'number',
-          'tel',
-          'url',
-          'date'
-        ], defaultValue: 'text');
+        addEnum('Type', 'type',
+            const ['text', 'email', 'password', 'number', 'tel', 'url', 'date'],
+            defaultValue: 'text');
         break;
       case ElementType.textarea:
         addText(l10n.propPlaceholder, 'placeholder');

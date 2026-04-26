@@ -61,8 +61,7 @@ class ElementLibrary extends StatelessWidget {
                 ),
                 for (final section in sections) ...[
                   _SectionHeader(title: section.title),
-                  for (final item in section.items)
-                    _DraggableRow(item: item),
+                  for (final item in section.items) _DraggableRow(item: item),
                   const SizedBox(height: 6),
                 ],
               ],
@@ -90,8 +89,7 @@ class ElementLibrary extends StatelessWidget {
         _Section(
           title: l10n.categoryContent,
           items: [
-            _LibraryItem(
-                ElementType.heading, Icons.title, l10n.elementHeading),
+            _LibraryItem(ElementType.heading, Icons.title, l10n.elementHeading),
             _LibraryItem(
                 ElementType.paragraph, Icons.notes, l10n.elementParagraph),
             _LibraryItem(ElementType.text, Icons.short_text, l10n.elementText),
@@ -99,8 +97,8 @@ class ElementLibrary extends StatelessWidget {
                 ElementType.image, Icons.image_outlined, l10n.elementImage),
             _LibraryItem(ElementType.link, Icons.link, l10n.elementLink),
             _LibraryItem(ElementType.list, Icons.list, l10n.elementList),
-            _LibraryItem(ElementType.video, Icons.videocam_outlined,
-                l10n.elementVideo),
+            _LibraryItem(
+                ElementType.video, Icons.videocam_outlined, l10n.elementVideo),
           ],
         ),
         _Section(
