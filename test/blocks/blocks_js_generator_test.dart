@@ -223,6 +223,42 @@ void main() {
     expect(js, contains('__l.push("x")'));
   });
 
+  test('escapes </script> sequences inside string literals', () {
+    final ws = BlockWorkspace(
+      id: 'el:btn1:onClick',
+      roots: [
+        _node('on_click',
+            next: _node('dom_set_text', fields: {
+              'target': 'self'
+            }, slots: {
+              'value':
+                  _node('text_literal', fields: {'value': '</script>oops'})
+            })),
+      ],
+    );
+    final js = BlocksJsGenerator.generateProject(_projectWith(ws));
+    expect(js, isNot(contains('</script>')));
+    expect(js, contains(r'<\/script>'));
+  });
+
+  test('dom_get_value caches the target lookup once', () {
+    final ws = BlockWorkspace(
+      id: 'el:btn1:onClick',
+      roots: [
+        _node('on_click',
+            next: _node('set_var', fields: {'name': 'v'}, slots: {
+              'value': _node('dom_get_value', fields: {'target': 'inputA'})
+            })),
+      ],
+      variables: [VariableDecl(name: 'v', type: BlockType.text)],
+    );
+    final js = BlocksJsGenerator.generateProject(_projectWith(ws));
+    // Should query the DOM once via a temp var, not repeat `$("inputA")`.
+    expect(js, contains('var __g ='));
+    final occurrences = '\$("inputA")'.allMatches(js).length;
+    expect(occurrences, 1);
+  });
+
   test('skips workspaces without a hat-shaped root', () {
     final ws = BlockWorkspace(
       id: 'el:btn1:onClick',

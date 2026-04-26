@@ -636,12 +636,20 @@ class _LogicTab extends StatelessWidget {
   static String _hatIdFor(String event) {
     switch (event) {
       case 'onChange':
+      // Input-style events behave like change-on-keystroke; map them onto the
+      // closest existing hat until dedicated hats are registered.
+      case 'onInput':
+      case 'onFocus':
+      case 'onBlur':
         return 'on_change';
       case 'onSubmit':
         return 'on_submit';
       case 'onLoad':
         return 'on_page_load';
       case 'onClick':
+      // Mouse hover events are bound via the click-style hat for now.
+      case 'onMouseEnter':
+      case 'onMouseLeave':
       default:
         return 'on_click';
     }

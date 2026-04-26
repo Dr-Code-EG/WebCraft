@@ -294,7 +294,8 @@ class BlocksJsGenerator {
 
       case 'dom_get_value':
         final target = _targetExpr(node, ctx);
-        return '(($target) ? ($target).value : "")';
+        // Wrap in an IIFE so the target query runs only once.
+        return '(function () { var __g = $target; return __g ? __g.value : ""; })()';
 
       case 'storage_get':
         final key = _field(node, 'key', 'key');
@@ -341,7 +342,10 @@ class BlocksJsGenerator {
         .replaceAll('"', r'\"')
         .replaceAll('\n', r'\n')
         .replaceAll('\r', r'\r')
-        .replaceAll('\t', r'\t');
+        .replaceAll('\t', r'\t')
+        // Prevent the inline `<script>...</script>` block from being closed
+        // early by a user-supplied `</script>` (or any `</...`) literal.
+        .replaceAll('</', r'<\/');
     return '"$escaped"';
   }
 
