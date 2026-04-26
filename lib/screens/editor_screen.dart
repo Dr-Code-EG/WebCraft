@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import '../models/element_node.dart';
 import '../models/project.dart';
 import '../services/export_service.dart';
 import '../state/editor_provider.dart';
@@ -11,9 +10,11 @@ import '../widgets/editor/canvas_view.dart';
 import '../widgets/editor/element_library.dart';
 import '../widgets/editor/properties_panel.dart';
 import '../widgets/editor/tree_view.dart';
-import 'block_editor_screen.dart';
 import 'preview_screen.dart';
 
+/// Sketchware-inspired editor: canvas in the center, vertical element
+/// library on the right, and a horizontal properties strip pinned to the
+/// bottom that opens dialogs for editing.
 class EditorScreen extends StatefulWidget {
   const EditorScreen({super.key, required this.project});
 
@@ -71,14 +72,21 @@ class _EditorScreenState extends State<EditorScreen> {
           final wide = c.maxWidth >= 900;
           return Scaffold(
             appBar: AppBar(
-              title: Text(widget.project.name,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700)),
+              title: Text(
+                widget.project.name,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
               actions: [
                 IconButton(
-                  tooltip: l10n.pageLogic,
-                  icon: const Icon(Icons.code_rounded),
-                  onPressed: () => _editPageLogic(context),
+                  tooltip: l10n.newPage,
+                  icon: const Icon(Icons.note_add_outlined),
+                  onPressed: () => _addPage(context),
+                ),
+                IconButton(
+                  tooltip: l10n.tree,
+                  icon: const Icon(Icons.account_tree_outlined),
+                  onPressed: () => _openTreeSheet(context),
                 ),
                 IconButton(
                   tooltip: l10n.preview,
@@ -96,85 +104,60 @@ class _EditorScreenState extends State<EditorScreen> {
                 ),
               ],
             ),
-            body: wide ? _wideLayout() : _phoneLayout(context, l10n),
-            floatingActionButton:
-                wide ? null : _buildPhoneFabRow(context, l10n),
+            body: SafeArea(
+              top: false,
+              child: wide ? _wideLayout() : _phoneLayout(),
+            ),
           );
         },
       ),
     );
   }
 
+  /// Tablet / desktop layout: canvas + properties stacked on the left,
+  /// vertical element library pinned to the right.
   Widget _wideLayout() {
     return const Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Expanded(
+          child: Column(
+            children: [
+              Expanded(child: CanvasView()),
+              Divider(height: 1, thickness: 1),
+              PropertiesPanel(),
+            ],
+          ),
+        ),
+        VerticalDivider(width: 1),
         SizedBox(width: 240, child: ElementLibrary()),
-        VerticalDivider(width: 1),
-        SizedBox(width: 220, child: TreeView()),
-        VerticalDivider(width: 1),
-        Expanded(child: CanvasView()),
-        VerticalDivider(width: 1),
-        SizedBox(width: 320, child: PropertiesPanel()),
       ],
     );
   }
 
-  Widget _phoneLayout(BuildContext context, AppLocalizations l10n) {
-    return const Padding(
-      padding: EdgeInsets.only(bottom: 80),
-      child: CanvasView(),
+  /// Phone layout: canvas + bottom properties + a slim vertical
+  /// element rail anchored to the right edge (Sketchware-style).
+  Widget _phoneLayout() {
+    return const Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: Column(
+            children: [
+              Expanded(child: CanvasView()),
+              Divider(height: 1, thickness: 1),
+              PropertiesPanel(),
+            ],
+          ),
+        ),
+        VerticalDivider(width: 1),
+        SizedBox(width: 132, child: ElementLibrary()),
+      ],
     );
   }
 
-  Widget _buildPhoneFabRow(BuildContext context, AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _SheetFab(
-            icon: Icons.widgets_outlined,
-            label: l10n.elements,
-            heroTag: 'fab-elements',
-            onPressed: () => _openSheet(
-              context,
-              title: l10n.elements,
-              child: const ElementLibrary(),
-            ),
-          ),
-          const SizedBox(width: 8),
-          _SheetFab(
-            icon: Icons.account_tree_outlined,
-            label: l10n.tree,
-            heroTag: 'fab-tree',
-            onPressed: () => _openSheet(
-              context,
-              title: l10n.tree,
-              child: const TreeView(),
-            ),
-          ),
-          const SizedBox(width: 8),
-          _SheetFab(
-            icon: Icons.tune_rounded,
-            label: l10n.properties,
-            heroTag: 'fab-props',
-            onPressed: () => _openSheet(
-              context,
-              title: l10n.properties,
-              child: const PropertiesPanel(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _openSheet(
-    BuildContext context, {
-    required String title,
-    required Widget child,
-  }) {
+  void _openTreeSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -196,14 +179,14 @@ class _EditorScreenState extends State<EditorScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
-                        title,
+                        l10n.tree,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
                     Expanded(
                       child: PrimaryScrollController(
                         controller: scrollController,
-                        child: child,
+                        child: const TreeView(),
                       ),
                     ),
                   ],
@@ -216,23 +199,37 @@ class _EditorScreenState extends State<EditorScreen> {
     );
   }
 
-  Future<void> _editPageLogic(BuildContext context) async {
+  Future<void> _addPage(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
-    final page = _editor.activePage;
-    final existing = page.events['onLoad'];
-    final result = await BlockEditorScreen.open(
-      context,
-      title: l10n.blockEditorTitle(l10n.onLoad),
-      initialXml: existing?.workspaceXml ?? '',
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(l10n.newPage),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: l10n.pageName,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(null),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+              child: Text(l10n.create),
+            ),
+          ],
+        );
+      },
     );
-    if (result != null) {
-      _editor.setPageEvent(
-        'onLoad',
-        ElementEvent(
-          workspaceXml: result.workspaceXml,
-          jsBody: result.jsBody,
-        ),
-      );
+    if (name != null && name.isNotEmpty) {
+      _editor.addPage(name);
     }
   }
 
@@ -271,30 +268,5 @@ class _EditorScreenState extends State<EditorScreen> {
         SnackBar(content: Text(l10n.exportFailed(e.toString()))),
       );
     }
-  }
-}
-
-class _SheetFab extends StatelessWidget {
-  const _SheetFab({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-    required this.heroTag,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-  final String heroTag;
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton.extended(
-      heroTag: heroTag,
-      onPressed: onPressed,
-      icon: Icon(icon, size: 18),
-      label: Text(label),
-      elevation: 2,
-    );
   }
 }
