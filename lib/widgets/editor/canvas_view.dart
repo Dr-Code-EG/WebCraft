@@ -230,7 +230,7 @@ class _ElementWidget extends StatelessWidget {
     final inner = _renderInner(context, node);
 
     final cs = Theme.of(context).colorScheme;
-    Widget wrapped = GestureDetector(
+    final Widget selectable = GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => ed.select(node.id),
       child: Container(
@@ -256,32 +256,30 @@ class _ElementWidget extends StatelessWidget {
       ),
     );
 
-    if (accepts) {
-      wrapped = DragTarget<ElementType>(
-        onWillAcceptWithDetails: (_) => true,
-        onAcceptWithDetails: (details) {
-          ed.addElementInside(details.data, node.id);
-        },
-        builder: (context, candidate, rejected) {
-          final hovering = candidate.isNotEmpty;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            decoration: BoxDecoration(
-              color: hovering ? cs.primary.withOpacity(0.12) : null,
-              border: Border.all(
-                color: hovering ? cs.primary : Colors.transparent,
-                width: hovering ? 2 : 0,
-                style: BorderStyle.solid,
-              ),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: wrapped,
-          );
-        },
-      );
-    }
+    if (!accepts) return selectable;
 
-    return wrapped;
+    return DragTarget<ElementType>(
+      onWillAcceptWithDetails: (_) => true,
+      onAcceptWithDetails: (details) {
+        ed.addElementInside(details.data, node.id);
+      },
+      builder: (context, candidate, rejected) {
+        final hovering = candidate.isNotEmpty;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          decoration: BoxDecoration(
+            color: hovering ? cs.primary.withOpacity(0.12) : null,
+            border: Border.all(
+              color: hovering ? cs.primary : Colors.transparent,
+              width: hovering ? 2 : 0,
+              style: BorderStyle.solid,
+            ),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: selectable,
+        );
+      },
+    );
   }
 
   Widget _renderInner(BuildContext context, ElementNode node) {

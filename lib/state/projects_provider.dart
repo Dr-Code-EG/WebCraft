@@ -30,6 +30,25 @@ class ProjectsProvider extends ChangeNotifier {
     return p;
   }
 
+  /// Persist an externally-built project (e.g. one produced by
+  /// [ImportService]) and surface it in the list. Renames if the id clashes.
+  Future<Project> addImported(Project p) async {
+    if (_projects.any((e) => e.id == p.id)) {
+      // Avoid id collision by giving the imported copy a fresh id.
+      final fresh = Project.fromJson(p.toJson()..['id'] = _newId());
+      await _storage.saveProject(fresh);
+      _projects.insert(0, fresh);
+      notifyListeners();
+      return fresh;
+    }
+    await _storage.saveProject(p);
+    _projects.insert(0, p);
+    notifyListeners();
+    return p;
+  }
+
+  String _newId() => DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+
   Future<void> delete(Project p) async {
     await _storage.deleteProject(p.id);
     _projects.removeWhere((e) => e.id == p.id);

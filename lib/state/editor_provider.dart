@@ -1,10 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/element_node.dart';
 import '../models/page_node.dart';
 import '../models/project.dart';
 
-/// Drives the visual editor: selection, mutations, undo/redo (basic).
+/// Drives the visual editor: selection, mutations, undo/redo (snapshot-based).
 class EditorProvider extends ChangeNotifier {
   EditorProvider(this.project);
 
@@ -12,8 +14,52 @@ class EditorProvider extends ChangeNotifier {
   String? _selectedElementId;
   bool _dirty = false;
 
+  // Undo/redo: history of JSON snapshots. We snapshot *before* each mutation
+  // and push onto _undo; redo is filled by `undo()` and cleared by mutations.
+  final List<String> _undo = <String>[];
+  final List<String> _redo = <String>[];
+  static const int _historyLimit = 60;
+
   String? get selectedElementId => _selectedElementId;
   bool get dirty => _dirty;
+  bool get canUndo => _undo.isNotEmpty;
+  bool get canRedo => _redo.isNotEmpty;
+
+  String _snapshot() => jsonEncode(project.toJson());
+
+  void _pushHistory() {
+    final snap = _snapshot();
+    if (_undo.isNotEmpty && _undo.last == snap) return;
+    _undo.add(snap);
+    if (_undo.length > _historyLimit) {
+      _undo.removeAt(0);
+    }
+    _redo.clear();
+  }
+
+  /// Roll back the most recent change. No-op when [canUndo] is false.
+  void undo() {
+    if (_undo.isEmpty) return;
+    final current = _snapshot();
+    final prev = _undo.removeLast();
+    _redo.add(current);
+    project.restoreFromJson(jsonDecode(prev) as Map<String, dynamic>);
+    _selectedElementId = null;
+    _dirty = true;
+    notifyListeners();
+  }
+
+  /// Re-apply the most recently undone change. No-op when [canRedo] is false.
+  void redo() {
+    if (_redo.isEmpty) return;
+    final current = _snapshot();
+    final next = _redo.removeLast();
+    _undo.add(current);
+    project.restoreFromJson(jsonDecode(next) as Map<String, dynamic>);
+    _selectedElementId = null;
+    _dirty = true;
+    notifyListeners();
+  }
 
   PageNode get activePage => project.activePage;
 
@@ -28,12 +74,14 @@ class EditorProvider extends ChangeNotifier {
   }
 
   void selectPage(String pageId) {
+    _pushHistory();
     project.activePageId = pageId;
     _selectedElementId = null;
     _markDirty();
   }
 
   void addPage(String name) {
+    _pushHistory();
     final fileName = '${_slug(name)}.html';
     final page = PageNode(
       name: name,
@@ -47,6 +95,7 @@ class EditorProvider extends ChangeNotifier {
 
   void deletePage(String pageId) {
     if (project.pages.length <= 1) return;
+    _pushHistory();
     project.pages.removeWhere((p) => p.id == pageId);
     project.activePageId = project.pages.first.id;
     _markDirty();
@@ -54,6 +103,7 @@ class EditorProvider extends ChangeNotifier {
 
   /// Add a new element to the currently selected container, or to root.
   void addElement(ElementType type) {
+    _pushHistory();
     final node = ElementNode.defaults(type);
     final parent = _resolveDropParent();
     parent.children.add(node);
@@ -65,6 +115,7 @@ class EditorProvider extends ChangeNotifier {
   void addElementInside(ElementType type, String parentId) {
     final parent = _findById(activePage.root, parentId);
     if (parent == null || !parent.type.acceptsChildren) return;
+    _pushHistory();
     final node = ElementNode.defaults(type);
     parent.children.add(node);
     _selectedElementId = node.id;
@@ -73,6 +124,7 @@ class EditorProvider extends ChangeNotifier {
 
   void deleteElement(String id) {
     if (id == activePage.root.id) return;
+    _pushHistory();
     _removeById(activePage.root, id);
     if (_selectedElementId == id) _selectedElementId = null;
     _markDirty();
@@ -81,6 +133,7 @@ class EditorProvider extends ChangeNotifier {
   void duplicateElement(String id) {
     final found = _findParentAndIndex(activePage.root, id);
     if (found == null) return;
+    _pushHistory();
     final clone = found.parent.children[found.index].copyWithNewIds();
     found.parent.children.insert(found.index + 1, clone);
     _selectedElementId = clone.id;
@@ -90,6 +143,7 @@ class EditorProvider extends ChangeNotifier {
   void moveElementUp(String id) {
     final found = _findParentAndIndex(activePage.root, id);
     if (found == null || found.index == 0) return;
+    _pushHistory();
     final list = found.parent.children;
     final node = list.removeAt(found.index);
     list.insert(found.index - 1, node);
@@ -101,14 +155,42 @@ class EditorProvider extends ChangeNotifier {
     if (found == null) return;
     final list = found.parent.children;
     if (found.index >= list.length - 1) return;
+    _pushHistory();
     final node = list.removeAt(found.index);
     list.insert(found.index + 1, node);
+    _markDirty();
+  }
+
+  /// Move [id] to be a sibling of [referenceId] at the given direction
+  /// (`above` / `below`) — used by drag-to-reorder in the tree.
+  void reorderElement(String id, String referenceId, {required bool above}) {
+    if (id == referenceId) return;
+    final src = _findParentAndIndex(activePage.root, id);
+    final dstProbe = _findParentAndIndex(activePage.root, referenceId);
+    if (src == null || dstProbe == null) return;
+    // Disallow moving a node into one of its descendants.
+    if (_findById(src.parent.children[src.index], referenceId) != null) {
+      return;
+    }
+    _pushHistory();
+    final node = src.parent.children.removeAt(src.index);
+    // Re-resolve destination index after removal (in case in same parent).
+    final newDst = _findParentAndIndex(activePage.root, referenceId);
+    if (newDst == null) {
+      // Reference was the just-removed item: bail out and put it back.
+      src.parent.children.insert(src.index, node);
+      return;
+    }
+    final insertAt = above ? newDst.index : newDst.index + 1;
+    newDst.parent.children.insert(insertAt, node);
+    _selectedElementId = node.id;
     _markDirty();
   }
 
   void updateProp(String elementId, String key, String value) {
     final el = _findById(activePage.root, elementId);
     if (el == null) return;
+    _pushHistory();
     if (value.isEmpty) {
       el.props.remove(key);
     } else {
@@ -120,11 +202,22 @@ class EditorProvider extends ChangeNotifier {
   void updateStyle(String elementId, String key, String value) {
     final el = _findById(activePage.root, elementId);
     if (el == null) return;
+    _pushHistory();
     if (value.isEmpty) {
       el.style.remove(key);
     } else {
       el.style[key] = value;
     }
+    _markDirty();
+  }
+
+  /// Replace the entire project state (pages, workspaces) from the given
+  /// JSON map — used by ZIP/JSON import. Captures history so the user can
+  /// undo the import.
+  void replaceFromJson(Map<String, dynamic> json) {
+    _pushHistory();
+    project.restoreFromJson(json);
+    _selectedElementId = null;
     _markDirty();
   }
 

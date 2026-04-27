@@ -59,6 +59,23 @@ class Project {
         },
       };
 
+  /// Replace the mutable state of [this] with the values from [json] in
+  /// place. Identity-preserving — used by the undo/redo system so the
+  /// `EditorProvider` can keep its `final Project project` reference.
+  void restoreFromJson(Map<String, dynamic> json) {
+    final restored = Project.fromJson(json);
+    name = restored.name;
+    createdAt = restored.createdAt;
+    updatedAt = restored.updatedAt;
+    pages
+      ..clear()
+      ..addAll(restored.pages);
+    activePageId = restored.activePageId;
+    workspaces
+      ..clear()
+      ..addAll(restored.workspaces);
+  }
+
   factory Project.fromJson(Map<String, dynamic> json) {
     final pages = (json['pages'] as List?)
             ?.map((p) => PageNode.fromJson(p as Map<String, dynamic>))

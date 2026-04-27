@@ -78,6 +78,20 @@ class _EditorScreenState extends State<EditorScreen> {
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               actions: [
+                Consumer<EditorProvider>(
+                  builder: (context, ed, _) => IconButton(
+                    tooltip: l10n.undo,
+                    icon: const Icon(Icons.undo_rounded),
+                    onPressed: ed.canUndo ? ed.undo : null,
+                  ),
+                ),
+                Consumer<EditorProvider>(
+                  builder: (context, ed, _) => IconButton(
+                    tooltip: l10n.redo,
+                    icon: const Icon(Icons.redo_rounded),
+                    onPressed: ed.canRedo ? ed.redo : null,
+                  ),
+                ),
                 IconButton(
                   tooltip: l10n.newPage,
                   icon: const Icon(Icons.note_add_outlined),

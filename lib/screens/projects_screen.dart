@@ -1,9 +1,11 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/project.dart';
+import '../services/import_service.dart';
 import '../state/projects_provider.dart';
 import 'editor_screen.dart';
 import 'settings_screen.dart';
@@ -20,6 +22,11 @@ class ProjectsScreen extends StatelessWidget {
         title: Text(l10n.appName,
             style: const TextStyle(fontWeight: FontWeight.w700)),
         actions: [
+          IconButton(
+            tooltip: l10n.importProject,
+            icon: const Icon(Icons.file_open_outlined),
+            onPressed: () => _importProject(context),
+          ),
           IconButton(
             tooltip: l10n.settings,
             icon: const Icon(Icons.settings_outlined),
@@ -107,6 +114,33 @@ class ProjectsScreen extends StatelessWidget {
     Navigator.of(rootCtx).push(
       MaterialPageRoute(builder: (_) => EditorScreen(project: project)),
     );
+  }
+
+  Future<void> _importProject(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final prov = Provider.of<ProjectsProvider>(context, listen: false);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['zip', 'json', 'webcraft'],
+        withData: false,
+      );
+      if (result == null || result.files.isEmpty) return;
+      final path = result.files.first.path;
+      if (path == null) return;
+      final imported = await ImportService.importFromPath(path);
+      final saved = await prov.addImported(imported);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.importSuccess)));
+      navigator.push(
+        MaterialPageRoute(builder: (_) => EditorScreen(project: saved)),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.importFailed(e.toString()))),
+      );
+    }
   }
 }
 
