@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../blocks/catalog/block_registry.dart';
 import '../../blocks/model/block_node.dart';
 import '../../blocks/model/block_types.dart';
@@ -173,7 +176,12 @@ class _Editor extends StatelessWidget {
         addText(l10n.propLink, 'href');
         break;
       case ElementType.image:
-        addText(l10n.propImageUrl, 'src');
+        chips.add(_PropChip(
+          icon: Icons.image_outlined,
+          label: l10n.propImageUrl,
+          value: _shortImage(element.props['src'] ?? ''),
+          onTap: () => _pickImageOrUrl(context, ed, element, 'src'),
+        ));
         addText(l10n.propAltText, 'alt');
         break;
       case ElementType.input:
@@ -292,10 +300,24 @@ class _Editor extends StatelessWidget {
       ));
     }
 
+    void addBox(String label, String key) {
+      chips.add(_PropChip(
+        icon: Icons.fit_screen_rounded,
+        label: label,
+        value: element.style[key] ?? '',
+        onTap: () => _editBoxModelDialog(
+          context,
+          title: label,
+          initial: element.style[key] ?? '',
+          onSubmit: (v) => ed.updateStyle(element.id, key, v),
+        ),
+      ));
+    }
+
     addSize(l10n.propWidth, 'width', hint: '100%');
     addSize(l10n.propHeight, 'height', hint: 'auto');
-    addSize(l10n.propPadding, 'padding', hint: '16px');
-    addSize(l10n.propMargin, 'margin', hint: '0');
+    addBox(l10n.propPadding, 'padding');
+    addBox(l10n.propMargin, 'margin');
     if (element.type.acceptsChildren) {
       addSize(l10n.propGap, 'gap', hint: '12px');
     }
@@ -391,6 +413,252 @@ class _Editor extends StatelessWidget {
       },
     );
     if (result != null) onSubmit(result);
+  }
+
+  /// 4-side picker for `padding` / `margin` shorthand. Parses the existing
+  /// CSS shorthand into top/right/bottom/left fields, then re-emits the
+  /// shortest equivalent shorthand (1/2/3/4 values) on save.
+  Future<void> _editBoxModelDialog(
+    BuildContext context, {
+    required String title,
+    required String initial,
+    required ValueChanged<String> onSubmit,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final initialSides = _parseBox(initial);
+    final tCtl = TextEditingController(text: initialSides[0]);
+    final rCtl = TextEditingController(text: initialSides[1]);
+    final bCtl = TextEditingController(text: initialSides[2]);
+    final lCtl = TextEditingController(text: initialSides[3]);
+    var linked = initialSides[0] == initialSides[1] &&
+        initialSides[0] == initialSides[2] &&
+        initialSides[0] == initialSides[3];
+
+    final result = await showDialog<String?>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setSt) {
+          Widget sideField(String label, TextEditingController c) {
+            return SizedBox(
+              width: 110,
+              child: TextField(
+                controller: c,
+                onChanged: (v) {
+                  if (linked) {
+                    tCtl.text = v;
+                    rCtl.text = v;
+                    bCtl.text = v;
+                    lCtl.text = v;
+                  }
+                },
+                decoration: InputDecoration(
+                  isDense: true,
+                  labelText: label,
+                  hintText: '0',
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            );
+          }
+
+          return AlertDialog(
+            title: Text(l10n.editProperty(title)),
+            content: SizedBox(
+              width: 320,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SwitchListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(l10n.all),
+                          value: linked,
+                          onChanged: (v) {
+                            setSt(() {
+                              linked = v;
+                              if (v) {
+                                final shared = tCtl.text;
+                                rCtl.text = shared;
+                                bCtl.text = shared;
+                                lCtl.text = shared;
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      sideField(l10n.top, tCtl),
+                      sideField(l10n.right, rCtl),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      sideField(l10n.bottom, bCtl),
+                      sideField(l10n.left, lCtl),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(null),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(''),
+                child: Text(l10n.clear),
+              ),
+              FilledButton(
+                onPressed: () {
+                  final compact = _composeBox(
+                    tCtl.text.trim(),
+                    rCtl.text.trim(),
+                    bCtl.text.trim(),
+                    lCtl.text.trim(),
+                  );
+                  Navigator.of(ctx).pop(compact);
+                },
+                child: Text(l10n.done),
+              ),
+            ],
+          );
+        });
+      },
+    );
+    if (result != null) onSubmit(result);
+  }
+
+  /// Parse a CSS shorthand value (`top right bottom left`, `tb rl`, etc) into
+  /// 4 individual sides.
+  static List<String> _parseBox(String raw) {
+    final parts =
+        raw.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    switch (parts.length) {
+      case 0:
+        return ['', '', '', ''];
+      case 1:
+        return [parts[0], parts[0], parts[0], parts[0]];
+      case 2:
+        return [parts[0], parts[1], parts[0], parts[1]];
+      case 3:
+        return [parts[0], parts[1], parts[2], parts[1]];
+      default:
+        return [parts[0], parts[1], parts[2], parts[3]];
+    }
+  }
+
+  /// Compose the shortest CSS shorthand for the four sides.
+  static String _composeBox(String t, String r, String b, String l) {
+    if (t.isEmpty && r.isEmpty && b.isEmpty && l.isEmpty) return '';
+    final tt = _withUnit(t);
+    final rr = _withUnit(r);
+    final bb = _withUnit(b);
+    final ll = _withUnit(l);
+    if (tt == rr && rr == bb && bb == ll) return tt;
+    if (tt == bb && rr == ll) return '$tt $rr';
+    if (rr == ll) return '$tt $rr $bb';
+    return '$tt $rr $bb $ll';
+  }
+
+  /// If [v] looks like a bare number, append `px` for convenience.
+  static String _withUnit(String v) {
+    if (v.isEmpty) return '0';
+    if (RegExp(r'^-?\d+(\.\d+)?$').hasMatch(v)) return '${v}px';
+    return v;
+  }
+
+  /// Shorten data URIs for display so the chip stays compact.
+  static String _shortImage(String src) {
+    if (src.isEmpty) return '';
+    if (src.startsWith('data:')) return '(image)';
+    return src;
+  }
+
+  /// Choose between picking a local image (encoded as a data URI) or
+  /// entering a URL. The data URI path keeps everything inside `project.json`
+  /// so the asset survives ZIP export without separate file management.
+  Future<void> _pickImageOrUrl(BuildContext context, EditorProvider ed,
+      ElementNode element, String key) async {
+    final l10n = AppLocalizations.of(context)!;
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.propImageUrl),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(ctx).pop('upload'),
+            child: const Row(children: [
+              Icon(Icons.upload_outlined, size: 18),
+              SizedBox(width: 8),
+              Text('Upload from device'),
+            ]),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(ctx).pop('url'),
+            child: const Row(children: [
+              Icon(Icons.link, size: 18),
+              SizedBox(width: 8),
+              Text('Use a URL'),
+            ]),
+          ),
+          if ((element.props[key] ?? '').isNotEmpty)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(ctx).pop('clear'),
+              child: const Row(children: [
+                Icon(Icons.delete_outline, size: 18),
+                SizedBox(width: 8),
+                Text('Clear'),
+              ]),
+            ),
+        ],
+      ),
+    );
+    if (choice == null) return;
+    if (choice == 'clear') {
+      ed.updateProp(element.id, key, '');
+      return;
+    }
+    if (choice == 'url') {
+      if (!context.mounted) return;
+      await _editTextDialog(
+        context,
+        title: l10n.propImageUrl,
+        initial: element.props[key] ?? '',
+        hint: 'https://...',
+        onSubmit: (v) => ed.updateProp(element.id, key, v),
+      );
+      return;
+    }
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 2400,
+      imageQuality: 85,
+    );
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    final ext = picked.name.split('.').last.toLowerCase();
+    final mime = switch (ext) {
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      'gif' => 'image/gif',
+      'svg' => 'image/svg+xml',
+      _ => 'image/jpeg',
+    };
+    final dataUri = 'data:$mime;base64,${base64Encode(bytes)}';
+    ed.updateProp(element.id, key, dataUri);
   }
 
   Future<void> _editColorDialog(

@@ -49,52 +49,90 @@ class _Node extends StatelessWidget {
     final selected = ed.selectedElementId == node.id;
     final cs = Theme.of(context).colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Material(
-          color: selected
-              ? cs.primaryContainer.withOpacity(0.6)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(8),
-            onTap: () => ed.select(node.id),
-            child: Padding(
-              padding: EdgeInsetsDirectional.only(
-                start: 8.0 + depth * 16,
-                end: 8,
-                top: 8,
-                bottom: 8,
+    final isRoot = node.id == ed.activePage.root.id;
+    final tile = Material(
+      color: selected
+          ? cs.primaryContainer.withOpacity(0.6)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => ed.select(node.id),
+        child: Padding(
+          padding: EdgeInsetsDirectional.only(
+            start: 8.0 + depth * 16,
+            end: 8,
+            top: 8,
+            bottom: 8,
+          ),
+          child: Row(
+            children: [
+              Icon(_iconFor(node.type), size: 18, color: cs.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  node.type.id,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w500, fontSize: 14),
+                ),
               ),
-              child: Row(
-                children: [
-                  Icon(_iconFor(node.type), size: 18, color: cs.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      node.type.id,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w500, fontSize: 14),
+              if (node.props['text']?.isNotEmpty == true)
+                Flexible(
+                  child: Text(
+                    '"${node.props['text']}"',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: cs.onSurfaceVariant,
                     ),
                   ),
-                  if (node.props['text']?.isNotEmpty == true)
-                    Flexible(
-                      child: Text(
-                        '"${node.props['text']}"',
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+                ),
+              if (!isRoot)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: Icon(Icons.drag_indicator,
+                      size: 16, color: cs.onSurfaceVariant),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    Widget draggable;
+    if (isRoot) {
+      draggable = tile;
+    } else {
+      draggable = LongPressDraggable<String>(
+        data: node.id,
+        feedback: Material(
+          elevation: 6,
+          borderRadius: BorderRadius.circular(8),
+          color: cs.surface,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(_iconFor(node.type), size: 18, color: cs.primary),
+                const SizedBox(width: 8),
+                Text(node.type.id),
+              ],
             ),
           ),
         ),
+        childWhenDragging: Opacity(opacity: 0.4, child: tile),
+        child: tile,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!isRoot) _DropEdge(referenceId: node.id, above: true),
+        draggable,
         for (final c in node.children) _Node(node: c, depth: depth + 1),
+        if (!isRoot) _DropEdge(referenceId: node.id, above: false),
       ],
     );
   }
@@ -136,5 +174,37 @@ class _Node extends StatelessWidget {
       case ElementType.video:
         return Icons.videocam_outlined;
     }
+  }
+}
+
+/// Thin DragTarget shown above/below a node tile so you can drop a dragged
+/// element to reorder it relative to that node.
+class _DropEdge extends StatelessWidget {
+  const _DropEdge({required this.referenceId, required this.above});
+  final String referenceId;
+  final bool above;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return DragTarget<String>(
+      onWillAcceptWithDetails: (details) => details.data != referenceId,
+      onAcceptWithDetails: (details) {
+        context
+            .read<EditorProvider>()
+            .reorderElement(details.data, referenceId, above: above);
+      },
+      builder: (context, candidate, _) {
+        final highlight = candidate.isNotEmpty;
+        return Container(
+          height: highlight ? 6 : 4,
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: highlight ? cs.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        );
+      },
+    );
   }
 }

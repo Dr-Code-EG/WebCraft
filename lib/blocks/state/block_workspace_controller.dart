@@ -295,7 +295,41 @@ class BlockWorkspaceController extends ChangeNotifier {
 
   void removeVariable(String name) {
     workspace.variables.removeWhere((v) => v.name == name);
+    // Drop any field references; otherwise generated JS would target an
+    // undeclared identifier. Block specs that use the variable as a slot
+    // child are left untouched — those slots simply re-resolve to null.
+    for (final root in workspace.roots) {
+      for (final n in root.walk()) {
+        final spec = BlockRegistry.instance.lookup(n.specId);
+        if (spec == null) continue;
+        for (final f in spec.fields) {
+          if (f.kind == BlockFieldKind.variable &&
+              n.fieldValues[f.name] == name) {
+            n.fieldValues.remove(f.name);
+          }
+        }
+      }
+    }
     notifyListeners();
+  }
+
+  /// Count how many places (block fields + slot children) reference the
+  /// variable [name]. Used by safe-delete confirmation dialogs.
+  int countVariableUsages(String name) {
+    var count = 0;
+    for (final root in workspace.roots) {
+      for (final n in root.walk()) {
+        final spec = BlockRegistry.instance.lookup(n.specId);
+        if (spec == null) continue;
+        for (final f in spec.fields) {
+          if (f.kind == BlockFieldKind.variable &&
+              n.fieldValues[f.name] == name) {
+            count++;
+          }
+        }
+      }
+    }
+    return count;
   }
 
   bool renameVariable(String oldName, String newName) {

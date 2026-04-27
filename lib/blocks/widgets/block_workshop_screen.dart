@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../model/block_node.dart';
 import '../model/block_spec.dart';
@@ -261,6 +262,36 @@ class _VariablesSheetState extends State<_VariablesSheet> {
     super.dispose();
   }
 
+  Future<void> _confirmRemoveVariable(
+      BuildContext context, String name) async {
+    final l10n = AppLocalizations.of(context)!;
+    final usages = widget.controller.countVariableUsages(name);
+    if (usages == 0) {
+      widget.controller.removeVariable(name);
+      return;
+    }
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(name),
+        content: Text(l10n.variableInUse(usages)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton.tonal(
+            style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(ctx).colorScheme.errorContainer),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.deleteAnyway),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) widget.controller.removeVariable(name);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -294,8 +325,7 @@ class _VariablesSheetState extends State<_VariablesSheet> {
                   subtitle: Text(v.type.id),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline, size: 20),
-                    onPressed: () =>
-                        widget.controller.removeVariable(v.name),
+                    onPressed: () => _confirmRemoveVariable(context, v.name),
                   ),
                 ),
               const Divider(),
