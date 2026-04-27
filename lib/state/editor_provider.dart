@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+import '../models/component_spec.dart';
 import '../models/element_node.dart';
 import '../models/page_node.dart';
 import '../models/project.dart';
@@ -224,6 +225,74 @@ class EditorProvider extends ChangeNotifier {
   void markSaved() {
     _dirty = false;
     notifyListeners();
+  }
+
+  /// Replace the entire theme variable map.
+  void setThemeVars(Map<String, String> vars) {
+    _pushHistory();
+    project.themeVars
+      ..clear()
+      ..addAll(vars);
+    _markDirty();
+  }
+
+  /// Update / insert a single CSS custom property.
+  void setThemeVar(String key, String value) {
+    if (key.isEmpty) return;
+    _pushHistory();
+    project.themeVars[key] = value;
+    _markDirty();
+  }
+
+  void removeThemeVar(String key) {
+    if (!project.themeVars.containsKey(key)) return;
+    _pushHistory();
+    project.themeVars.remove(key);
+    _markDirty();
+  }
+
+  void setCustomCss(String css) {
+    if (project.customCss == css) return;
+    _pushHistory();
+    project.customCss = css;
+    _markDirty();
+  }
+
+  /// Save the currently selected element subtree as a reusable component.
+  /// Returns the saved component, or `null` if nothing is selected.
+  ComponentSpec? saveSelectionAsComponent(String name) {
+    final id = _selectedElementId;
+    if (id == null || id == activePage.root.id) return null;
+    final el = _findById(activePage.root, id);
+    if (el == null) return null;
+    _pushHistory();
+    final clone = el.copyWithNewIds();
+    final comp =
+        ComponentSpec(name: name.isEmpty ? clone.type.name : name, root: clone);
+    project.components.add(comp);
+    _markDirty();
+    return comp;
+  }
+
+  /// Insert a saved component into the current drop parent (selected
+  /// container, or the root if no container is selected). Returns the new
+  /// node's id so callers can select it.
+  String insertComponent(ComponentSpec comp) {
+    _pushHistory();
+    final clone = comp.root.copyWithNewIds();
+    final parent = _resolveDropParent();
+    parent.children.add(clone);
+    _selectedElementId = clone.id;
+    _markDirty();
+    return clone.id;
+  }
+
+  void deleteComponent(String componentId) {
+    final idx = project.components.indexWhere((c) => c.id == componentId);
+    if (idx < 0) return;
+    _pushHistory();
+    project.components.removeAt(idx);
+    _markDirty();
   }
 
   /// Notify listeners that block workspaces (event handlers, variables) on

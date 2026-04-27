@@ -1,10 +1,27 @@
 import 'package:uuid/uuid.dart';
 
 import '../blocks/model/block_workspace.dart';
+import 'component_spec.dart';
 import 'element_node.dart';
 import 'page_node.dart';
 
 const _uuid = Uuid();
+
+/// Default CSS custom properties seeded for every new project. Used by the
+/// theme editor as the editable palette and emitted as `:root { --... }`
+/// declarations in the generated stylesheet.
+const Map<String, String> kDefaultThemeVars = {
+  '--primary': '#2563eb',
+  '--primary-fg': '#ffffff',
+  '--accent': '#7c3aed',
+  '--bg': '#ffffff',
+  '--surface': '#f9fafb',
+  '--text': '#111827',
+  '--muted': '#6b7280',
+  '--border': '#e5e7eb',
+  '--radius': '8px',
+  '--font-base': '16px',
+};
 
 /// Top-level project model. Persisted as a single JSON file per project.
 class Project {
@@ -16,6 +33,9 @@ class Project {
     List<PageNode>? pages,
     String? activePageId,
     Map<String, BlockWorkspace>? workspaces,
+    Map<String, String>? themeVars,
+    String? customCss,
+    List<ComponentSpec>? components,
   })  : id = id ?? _uuid.v4(),
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now(),
@@ -28,7 +48,10 @@ class Project {
                 root: ElementNode.defaults(ElementType.container),
               )
             ],
-        workspaces = workspaces ?? <String, BlockWorkspace>{} {
+        workspaces = workspaces ?? <String, BlockWorkspace>{},
+        themeVars = themeVars ?? Map<String, String>.from(kDefaultThemeVars),
+        customCss = customCss ?? '',
+        components = components ?? <ComponentSpec>[] {
     this.activePageId = activePageId ?? this.pages.first.id;
   }
 
@@ -42,6 +65,18 @@ class Project {
   /// Block-editor workspaces keyed by [WorkspaceIds.forPage] /
   /// [WorkspaceIds.forElement]. Empty workspaces are pruned on save.
   final Map<String, BlockWorkspace> workspaces;
+
+  /// Editable CSS custom properties, emitted as `:root { --name: value }`
+  /// in the generated stylesheet. Authored from the in-app theme editor.
+  final Map<String, String> themeVars;
+
+  /// Free-form CSS appended verbatim after the base stylesheet (and theme
+  /// variables). Authored from the in-app custom CSS editor.
+  String customCss;
+
+  /// User-saved reusable components — element subtrees that appear in the
+  /// element library so they can be cloned into any page.
+  final List<ComponentSpec> components;
 
   PageNode get activePage =>
       pages.firstWhere((p) => p.id == activePageId, orElse: () => pages.first);
@@ -57,6 +92,9 @@ class Project {
           for (final e in workspaces.entries)
             if (!e.value.isEmpty) e.key: e.value.toJson(),
         },
+        'themeVars': themeVars,
+        'customCss': customCss,
+        'components': components.map((c) => c.toJson()).toList(),
       };
 
   /// Replace the mutable state of [this] with the values from [json] in
@@ -74,6 +112,13 @@ class Project {
     workspaces
       ..clear()
       ..addAll(restored.workspaces);
+    themeVars
+      ..clear()
+      ..addAll(restored.themeVars);
+    customCss = restored.customCss;
+    components
+      ..clear()
+      ..addAll(restored.components);
   }
 
   factory Project.fromJson(Map<String, dynamic> json) {
@@ -89,6 +134,17 @@ class Project {
             BlockWorkspace.fromJson(v as Map<String, dynamic>);
       });
     }
+    final themeVars = <String, String>{};
+    final tv = json['themeVars'] as Map?;
+    if (tv != null) {
+      tv.forEach((k, v) {
+        themeVars[k as String] = v?.toString() ?? '';
+      });
+    }
+    final components = (json['components'] as List?)
+            ?.map((c) => ComponentSpec.fromJson(c as Map<String, dynamic>))
+            .toList() ??
+        <ComponentSpec>[];
     return Project(
       id: json['id'] as String?,
       name: json['name'] as String? ?? 'Untitled',
@@ -97,6 +153,9 @@ class Project {
       pages: pages.isEmpty ? null : pages,
       activePageId: json['activePageId'] as String?,
       workspaces: workspaces,
+      themeVars: themeVars.isEmpty ? null : themeVars,
+      customCss: json['customCss'] as String?,
+      components: components,
     );
   }
 }

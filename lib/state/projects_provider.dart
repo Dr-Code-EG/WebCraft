@@ -30,6 +30,20 @@ class ProjectsProvider extends ChangeNotifier {
     return p;
   }
 
+  /// Create a new project and seed it with the given template before saving.
+  /// Used by the "New from template" picker on the projects screen.
+  Future<Project> createWithSeed(
+    String name,
+    void Function(Project project) seed,
+  ) async {
+    final p = Project(name: name);
+    seed(p);
+    await _storage.saveProject(p);
+    _projects.insert(0, p);
+    notifyListeners();
+    return p;
+  }
+
   /// Persist an externally-built project (e.g. one produced by
   /// [ImportService]) and surface it in the list. Renames if the id clashes.
   Future<Project> addImported(Project p) async {

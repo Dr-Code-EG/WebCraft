@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../models/project.dart';
 import '../services/import_service.dart';
+import '../services/template_library.dart';
 import '../state/projects_provider.dart';
 import 'editor_screen.dart';
 import 'settings_screen.dart';
@@ -73,41 +74,112 @@ class ProjectsScreen extends StatelessWidget {
   void _showCreateDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController();
+    String selectedTemplateId = 'blank';
 
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.createProject),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textInputAction: TextInputAction.done,
-          decoration: InputDecoration(
-            labelText: l10n.projectName,
-            hintText: l10n.projectNameHint,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Text(l10n.createProject),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
+                    labelText: l10n.projectName,
+                    hintText: l10n.projectNameHint,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.newProjectTemplateOption,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final t in TemplateLibrary.all())
+                      ChoiceChip(
+                        selected: selectedTemplateId == t.id,
+                        avatar: Icon(_iconFromKey(t.icon), size: 18),
+                        label: Text(_localizeTemplate(t.id, l10n)),
+                        onSelected: (_) =>
+                            setLocal(() => selectedTemplateId = t.id),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          onSubmitted: (_) => _confirmCreate(ctx, context, controller.text),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => _confirmCreate(
+                  ctx, context, controller.text, selectedTemplateId),
+              child: Text(l10n.create),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => _confirmCreate(ctx, context, controller.text),
-            child: Text(l10n.create),
-          ),
-        ],
       ),
     );
   }
 
+  String _localizeTemplate(String id, AppLocalizations l10n) {
+    switch (id) {
+      case 'landing':
+        return l10n.templateLanding;
+      case 'portfolio':
+        return l10n.templatePortfolio;
+      case 'blog':
+        return l10n.templateBlog;
+      default:
+        return l10n.templateBlank;
+    }
+  }
+
+  IconData _iconFromKey(String key) {
+    switch (key) {
+      case 'rocket_launch':
+        return Icons.rocket_launch_outlined;
+      case 'photo_library':
+        return Icons.photo_library_outlined;
+      case 'article':
+        return Icons.article_outlined;
+      default:
+        return Icons.description_outlined;
+    }
+  }
+
   Future<void> _confirmCreate(
-      BuildContext dialogCtx, BuildContext rootCtx, String name) async {
+    BuildContext dialogCtx,
+    BuildContext rootCtx,
+    String name,
+    String templateId,
+  ) async {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return;
     final prov = Provider.of<ProjectsProvider>(rootCtx, listen: false);
-    final project = await prov.create(trimmed);
+    final template = TemplateLibrary.all().firstWhere(
+      (t) => t.id == templateId,
+      orElse: () => TemplateLibrary.all().first,
+    );
+    final project = template.id == 'blank'
+        ? await prov.create(trimmed)
+        : await prov.createWithSeed(
+            trimmed,
+            (p) => TemplateLibrary.apply(p, template),
+          );
     if (!dialogCtx.mounted) return;
     Navigator.of(dialogCtx).pop();
     if (!rootCtx.mounted) return;

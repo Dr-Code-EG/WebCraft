@@ -193,5 +193,27 @@
   "addInside": "Add inside",
   "selectElement": "Select an element on the canvas to edit it",
   "tapToEdit": "Tap a property to edit it",
-  "noContentProps": "This element has no content properties"
+  "noContentProps": "This element has no content properties",
+
+  "more": "More",
+  "themeEditor": "Theme editor",
+  "themeEditorHint": "Edit CSS variables. They are emitted at :root and resolved by var(--name) calls in the generated stylesheet.",
+  "themeEditorAdd": "Add variable",
+  "themeEditorReset": "Reset to defaults",
+  "customCss": "Custom CSS",
+  "customCssHint": "Free-form CSS, appended to the generated stylesheet.",
+  "exportGithubPages": "Export for GitHub Pages",
+
+  "components": "Components",
+  "saveAsComponent": "Save as component",
+  "componentName": "Component name",
+  "noComponentsYet": "No saved components yet. Pick an element and tap “Save as component”.",
+  "insertComponent": "Insert component",
+  "componentSaved": "Saved as component",
+
+  "newProjectTemplateOption": "Choose template",
+  "templateBlank": "Blank",
+  "templateLanding": "Landing page",
+  "templatePortfolio": "Portfolio",
+  "templateBlog": "Blog post"
 }

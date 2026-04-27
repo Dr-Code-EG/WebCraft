@@ -7,8 +7,10 @@ import '../services/export_service.dart';
 import '../state/editor_provider.dart';
 import '../state/projects_provider.dart';
 import '../widgets/editor/canvas_view.dart';
+import '../widgets/editor/components_sheet.dart';
 import '../widgets/editor/element_library.dart';
 import '../widgets/editor/properties_panel.dart';
+import '../widgets/editor/theme_editor_dialog.dart';
 import '../widgets/editor/tree_view.dart';
 import 'preview_screen.dart';
 
@@ -103,6 +105,11 @@ class _EditorScreenState extends State<EditorScreen> {
                   onPressed: () => _openTreeSheet(context),
                 ),
                 IconButton(
+                  tooltip: l10n.components,
+                  icon: const Icon(Icons.widgets_outlined),
+                  onPressed: () => ComponentsSheet.show(context),
+                ),
+                IconButton(
                   tooltip: l10n.preview,
                   icon: const Icon(Icons.play_arrow_rounded),
                   onPressed: () {
@@ -111,10 +118,60 @@ class _EditorScreenState extends State<EditorScreen> {
                     ));
                   },
                 ),
-                IconButton(
-                  tooltip: l10n.exportZip,
-                  icon: const Icon(Icons.ios_share_rounded),
-                  onPressed: () => _exportZip(context),
+                PopupMenuButton<String>(
+                  tooltip: l10n.more,
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (key) async {
+                    switch (key) {
+                      case 'theme':
+                        await ThemeEditorDialog.show(context);
+                        break;
+                      case 'css':
+                        await CustomCssDialog.show(context);
+                        break;
+                      case 'exportZip':
+                        await _exportZip(context, ExportTarget.generic);
+                        break;
+                      case 'exportGh':
+                        await _exportZip(context, ExportTarget.githubPages);
+                        break;
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 'theme',
+                      child: Row(children: [
+                        const Icon(Icons.palette_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.themeEditor),
+                      ]),
+                    ),
+                    PopupMenuItem(
+                      value: 'css',
+                      child: Row(children: [
+                        const Icon(Icons.code, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.customCss),
+                      ]),
+                    ),
+                    const PopupMenuDivider(),
+                    PopupMenuItem(
+                      value: 'exportZip',
+                      child: Row(children: [
+                        const Icon(Icons.ios_share_rounded, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.exportZip),
+                      ]),
+                    ),
+                    PopupMenuItem(
+                      value: 'exportGh',
+                      child: Row(children: [
+                        const Icon(Icons.public, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.exportGithubPages),
+                      ]),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -253,7 +310,7 @@ class _EditorScreenState extends State<EditorScreen> {
     }
   }
 
-  Future<void> _exportZip(BuildContext context) async {
+  Future<void> _exportZip(BuildContext context, ExportTarget target) async {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context, rootNavigator: true);
@@ -279,7 +336,7 @@ class _EditorScreenState extends State<EditorScreen> {
     );
     try {
       await _saveNow(showSnack: false);
-      await ExportService().shareZip(widget.project);
+      await ExportService().shareZip(widget.project, target: target);
       navigator.pop();
       messenger.showSnackBar(SnackBar(content: Text(l10n.exportSuccess)));
     } catch (e) {

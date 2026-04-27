@@ -55,7 +55,7 @@ class _PreviewScreenState extends State<PreviewScreen> {
         orElse: () => widget.project.pages.first);
     final body = HtmlGenerator.pageDocument(widget.project, page,
         includeStyleSheet: false, includeMainScript: false);
-    final css = CssGenerator.baseStylesheet();
+    final css = CssGenerator.stylesheetFor(widget.project);
     final js = BlocksJsGenerator.generateProject(widget.project);
     final scriptTag = js.isEmpty ? '' : '<script>$js</script>';
     final injected = body
@@ -74,7 +74,7 @@ class _PreviewScreenState extends State<PreviewScreen> {
         title: Text(l10n.preview),
         actions: [
           PopupMenuButton<PreviewDevice>(
-            tooltip: l10n.responsiveDesktop,
+            tooltip: _deviceLabel(_device, l10n),
             icon: Icon(_device.icon),
             onSelected: (d) => setState(() => _device = d),
             itemBuilder: (_) => [

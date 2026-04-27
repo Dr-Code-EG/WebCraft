@@ -185,5 +185,27 @@
   "addInside": "إضافة بالداخل",
   "selectElement": "اختر عنصراً من اللوحة لتعديله",
   "tapToEdit": "اضغط على خاصية لتعديلها",
-  "noContentProps": "هذا العنصر ليس له خصائص محتوى"
+  "noContentProps": "هذا العنصر ليس له خصائص محتوى",
+
+  "more": "المزيد",
+  "themeEditor": "محرر السمة",
+  "themeEditorHint": "حرّر متغيرات CSS. تُكتب داخل :root وتُستخدم عبر var(--name) في ملف التنسيق.",
+  "themeEditorAdd": "إضافة متغير",
+  "themeEditorReset": "إعادة الافتراضي",
+  "customCss": "CSS مخصص",
+  "customCssHint": "CSS حر يُضاف بعد التنسيق المُولَّد.",
+  "exportGithubPages": "تصدير لـ GitHub Pages",
+
+  "components": "المكوّنات",
+  "saveAsComponent": "حفظ كمكوّن",
+  "componentName": "اسم المكوّن",
+  "noComponentsYet": "لا توجد مكوّنات محفوظة. اختر عنصراً واضغط ”حفظ كمكوّن“.",
+  "insertComponent": "إدراج مكوّن",
+  "componentSaved": "تم الحفظ كمكوّن",
+
+  "newProjectTemplateOption": "اختر قالباً",
+  "templateBlank": "فارغ",
+  "templateLanding": "صفحة هبوط",
+  "templatePortfolio": "محفظة أعمال",
+  "templateBlog": "مقال مدوّنة"
 }
