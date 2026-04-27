@@ -15,6 +15,12 @@ class EditorProvider extends ChangeNotifier {
   String? _selectedElementId;
   bool _dirty = false;
 
+  // Clipboard: holds a JSON snapshot of an ElementNode (root only). Cut/copy
+  // store; paste deep-clones with fresh ids and inserts into the current
+  // drop parent (or alongside the selection's parent if applicable).
+  Map<String, dynamic>? _clipboard;
+  bool get hasClipboard => _clipboard != null;
+
   // Undo/redo: history of JSON snapshots. We snapshot *before* each mutation
   // and push onto _undo; redo is filled by `undo()` and cleared by mutations.
   final List<String> _undo = <String>[];
@@ -293,6 +299,49 @@ class EditorProvider extends ChangeNotifier {
     _pushHistory();
     project.components.removeAt(idx);
     _markDirty();
+  }
+
+  // -- Clipboard ops -------------------------------------------------------
+
+  /// Copy the selected element into the clipboard. Root pages cannot be
+  /// copied. Returns true if a copy was performed.
+  bool copySelection() {
+    final id = _selectedElementId;
+    if (id == null || id == activePage.root.id) return false;
+    final el = _findById(activePage.root, id);
+    if (el == null) return false;
+    _clipboard = el.toJson();
+    notifyListeners();
+    return true;
+  }
+
+  /// Copy + delete the selected element. Returns true if performed.
+  bool cutSelection() {
+    final id = _selectedElementId;
+    if (id == null || id == activePage.root.id) return false;
+    final el = _findById(activePage.root, id);
+    if (el == null) return false;
+    _pushHistory();
+    _clipboard = el.toJson();
+    _removeById(activePage.root, id);
+    _selectedElementId = null;
+    _markDirty();
+    return true;
+  }
+
+  /// Paste the clipboard contents (with fresh ids) into the current drop
+  /// parent. No-op if the clipboard is empty. Returns the new node id.
+  String? pasteFromClipboard() {
+    final cb = _clipboard;
+    if (cb == null) return null;
+    _pushHistory();
+    final restored = ElementNode.fromJson(cb);
+    final clone = restored.copyWithNewIds();
+    final parent = _resolveDropParent();
+    parent.children.add(clone);
+    _selectedElementId = clone.id;
+    _markDirty();
+    return clone.id;
   }
 
   /// Notify listeners that block workspaces (event handlers, variables) on

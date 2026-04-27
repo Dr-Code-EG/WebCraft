@@ -118,11 +118,21 @@ class _EditorScreenState extends State<EditorScreen> {
                     ));
                   },
                 ),
-                PopupMenuButton<String>(
+                Consumer<EditorProvider>(
+                  builder: (context, ed, _) => PopupMenuButton<String>(
                   tooltip: l10n.more,
                   icon: const Icon(Icons.more_vert),
                   onSelected: (key) async {
                     switch (key) {
+                      case 'copy':
+                        ed.copySelection();
+                        break;
+                      case 'cut':
+                        ed.cutSelection();
+                        break;
+                      case 'paste':
+                        ed.pasteFromClipboard();
+                        break;
                       case 'theme':
                         await ThemeEditorDialog.show(context);
                         break;
@@ -138,6 +148,36 @@ class _EditorScreenState extends State<EditorScreen> {
                     }
                   },
                   itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 'copy',
+                      enabled: ed.selectedElement != null &&
+                          ed.selectedElementId != ed.activePage.root.id,
+                      child: Row(children: [
+                        const Icon(Icons.copy_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.copy),
+                      ]),
+                    ),
+                    PopupMenuItem(
+                      value: 'cut',
+                      enabled: ed.selectedElement != null &&
+                          ed.selectedElementId != ed.activePage.root.id,
+                      child: Row(children: [
+                        const Icon(Icons.cut_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.cut),
+                      ]),
+                    ),
+                    PopupMenuItem(
+                      value: 'paste',
+                      enabled: ed.hasClipboard,
+                      child: Row(children: [
+                        const Icon(Icons.content_paste, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.paste),
+                      ]),
+                    ),
+                    const PopupMenuDivider(),
                     PopupMenuItem(
                       value: 'theme',
                       child: Row(children: [
@@ -172,6 +212,7 @@ class _EditorScreenState extends State<EditorScreen> {
                       ]),
                     ),
                   ],
+                ),
                 ),
               ],
             ),

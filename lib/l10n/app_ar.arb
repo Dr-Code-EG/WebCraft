@@ -202,6 +202,9 @@
   "noComponentsYet": "لا توجد مكوّنات محفوظة. اختر عنصراً واضغط ”حفظ كمكوّن“.",
   "insertComponent": "إدراج مكوّن",
   "componentSaved": "تم الحفظ كمكوّن",
+  "copy": "نسخ",
+  "cut": "قص",
+  "paste": "لصق",
 
   "newProjectTemplateOption": "اختر قالباً",
   "templateBlank": "فارغ",

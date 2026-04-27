@@ -210,6 +210,9 @@
   "noComponentsYet": "No saved components yet. Pick an element and tap “Save as component”.",
   "insertComponent": "Insert component",
   "componentSaved": "Saved as component",
+  "copy": "Copy",
+  "cut": "Cut",
+  "paste": "Paste",
 
   "newProjectTemplateOption": "Choose template",
   "templateBlank": "Blank",
