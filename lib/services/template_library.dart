@@ -142,7 +142,11 @@ class TemplateLibrary {
             ),
             ElementNode(
               type: ElementType.row,
-              style: {'gap': '24px', 'flex-direction': 'row'},
+              style: {
+                'display': 'flex',
+                'gap': '24px',
+                'flex-direction': 'row',
+              },
               children: [
                 _featureCard('Drag & drop',
                     'Visual editor that feels like Sketchware.'),
@@ -224,7 +228,7 @@ class TemplateLibrary {
         ),
         ElementNode(
           type: ElementType.row,
-          style: {'gap': '16px'},
+          style: {'display': 'flex', 'gap': '16px'},
           children: [
             _portfolioItem('Project Alpha', 'Mobile app · 2024'),
             _portfolioItem('Project Beta', 'Web app · 2023'),

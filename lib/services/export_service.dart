@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -86,7 +87,9 @@ class ExportService {
   }
 
   ArchiveFile _textFile(String path, String content) {
-    final bytes = Uint8List.fromList(content.codeUnits);
+    // Use UTF-8 (not codeUnits which truncates each UTF-16 unit to a byte)
+    // so non-ASCII content survives the ZIP round-trip.
+    final bytes = Uint8List.fromList(utf8.encode(content));
     return ArchiveFile(path, bytes.length, bytes);
   }
 
