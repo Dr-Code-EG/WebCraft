@@ -71,11 +71,12 @@ class _ThemeEditorDialogState extends State<ThemeEditorDialog> {
   }
 
   void _addVar() async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController();
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('New CSS variable'),
+        title: Text(l10n.themeEditorNewVar),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -87,7 +88,7 @@ class _ThemeEditorDialogState extends State<ThemeEditorDialog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(null),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
@@ -99,7 +100,7 @@ class _ThemeEditorDialogState extends State<ThemeEditorDialog> {
               final cleaned = raw.startsWith('--') ? raw : '--$raw';
               Navigator.of(ctx).pop(cleaned);
             },
-            child: const Text('Add'),
+            child: Text(l10n.themeEditorAdd),
           ),
         ],
       ),

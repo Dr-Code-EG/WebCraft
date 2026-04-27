@@ -84,4 +84,20 @@ void main() {
     expect(restored.themeVars['--primary'], '#ff0066');
     expect(restored.customCss, 'body { background: red; }');
   });
+
+  test('explicitly cleared themeVars stay empty after round-trip', () {
+    final p = _seed();
+    p.themeVars.clear();
+    final json = p.toJson();
+    final restored = Project.fromJson(json);
+    expect(restored.themeVars, isEmpty);
+  });
+
+  test('legacy projects with no themeVars key get default vars seeded', () {
+    final p = _seed();
+    final json = p.toJson()..remove('themeVars');
+    final restored = Project.fromJson(json);
+    expect(restored.themeVars, isNotEmpty);
+    expect(restored.themeVars.containsKey('--primary'), isTrue);
+  });
 }

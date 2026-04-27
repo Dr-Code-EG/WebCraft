@@ -199,6 +199,7 @@
   "themeEditor": "Theme editor",
   "themeEditorHint": "Edit CSS variables. They are emitted at :root and resolved by var(--name) calls in the generated stylesheet.",
   "themeEditorAdd": "Add variable",
+  "themeEditorNewVar": "New CSS variable",
   "themeEditorReset": "Reset to defaults",
   "customCss": "Custom CSS",
   "customCssHint": "Free-form CSS, appended to the generated stylesheet.",

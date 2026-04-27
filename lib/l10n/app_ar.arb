@@ -191,6 +191,7 @@
   "themeEditor": "محرر السمة",
   "themeEditorHint": "حرّر متغيرات CSS. تُكتب داخل :root وتُستخدم عبر var(--name) في ملف التنسيق.",
   "themeEditorAdd": "إضافة متغير",
+  "themeEditorNewVar": "متغير CSS جديد",
   "themeEditorReset": "إعادة الافتراضي",
   "customCss": "CSS مخصص",
   "customCssHint": "CSS حر يُضاف بعد التنسيق المُولَّد.",

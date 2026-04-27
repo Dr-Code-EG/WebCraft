@@ -153,7 +153,10 @@ class Project {
       pages: pages.isEmpty ? null : pages,
       activePageId: json['activePageId'] as String?,
       workspaces: workspaces,
-      themeVars: themeVars.isEmpty ? null : themeVars,
+      // Pass `null` only when the JSON didn't carry a themeVars key at all
+      // (legacy projects). An explicit empty map means the user cleared all
+      // vars — preserve that, don't silently restore defaults.
+      themeVars: tv == null ? null : themeVars,
       customCss: json['customCss'] as String?,
       components: components,
     );
