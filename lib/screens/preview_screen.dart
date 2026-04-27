@@ -74,7 +74,7 @@ class _PreviewScreenState extends State<PreviewScreen> {
         title: Text(l10n.preview),
         actions: [
           PopupMenuButton<PreviewDevice>(
-            tooltip: l10n.responsiveDesktop,
+            tooltip: _deviceLabel(_device, l10n),
             icon: Icon(_device.icon),
             onSelected: (d) => setState(() => _device = d),
             itemBuilder: (_) => [
