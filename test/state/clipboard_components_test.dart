@@ -75,6 +75,24 @@ void main() {
     expect(ed.activePage.root.children, hasLength(2));
   });
 
+  test('clipboard is decoupled from the live element after copy', () {
+    final ed = EditorProvider(_seed());
+    ed.addElement(ElementType.heading);
+    final original = ed.activePage.root.children.single;
+    ed.select(original.id);
+    ed.updateProp(original.id, 'text', 'Original');
+
+    expect(ed.copySelection(), isTrue);
+    ed.updateProp(original.id, 'text', 'Mutated');
+    ed.updateStyle(original.id, 'color', '#ff0000');
+
+    final newId = ed.pasteFromClipboard()!;
+    final pasted = ed.activePage.root.children
+        .firstWhere((c) => c.id == newId);
+    expect(pasted.props['text'], 'Original');
+    expect(pasted.style['color'], isNot('#ff0000'));
+  });
+
   test('theme vars and custom CSS round-trip through Project JSON', () {
     final p = _seed();
     p.themeVars['--primary'] = '#ff0066';

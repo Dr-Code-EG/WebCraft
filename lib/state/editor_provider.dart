@@ -310,7 +310,7 @@ class EditorProvider extends ChangeNotifier {
     if (id == null || id == activePage.root.id) return false;
     final el = _findById(activePage.root, id);
     if (el == null) return false;
-    _clipboard = el.toJson();
+    _clipboard = _cloneToJson(el);
     notifyListeners();
     return true;
   }
@@ -322,12 +322,18 @@ class EditorProvider extends ChangeNotifier {
     final el = _findById(activePage.root, id);
     if (el == null) return false;
     _pushHistory();
-    _clipboard = el.toJson();
+    _clipboard = _cloneToJson(el);
     _removeById(activePage.root, id);
     _selectedElementId = null;
     _markDirty();
     return true;
   }
+
+  /// Deep-clone an element to JSON. `ElementNode.toJson` shares inner `props`
+  /// and `style` map references; without this round-trip a subsequent edit on
+  /// the live element would silently mutate the clipboard payload.
+  Map<String, dynamic> _cloneToJson(ElementNode el) =>
+      jsonDecode(jsonEncode(el.toJson())) as Map<String, dynamic>;
 
   /// Paste the clipboard contents (with fresh ids) into the current drop
   /// parent. No-op if the clipboard is empty. Returns the new node id.
